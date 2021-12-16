@@ -510,6 +510,9 @@ func (hs *clientHandshakeStateTLS13) establishHandshakeKeys() error {
 					return err
 				}
 				hs.keyKEMShare = true
+				/* -------------------------------- Modified -------------------------------- */
+				fmt.Printf("Client KEX\nKEMId: %x\nsharedKey:\n  %x\n\n",kemPrivate.KEMId, sharedKey)
+				/* ----------------------------------- End ---------------------------------- */
 			}
 		}
 	}
