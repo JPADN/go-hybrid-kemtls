@@ -21,6 +21,10 @@ const (
 	Kyber512 ID = 0x01fc
 	// SIKEp434 is a post-quantum KEM, as defined in: https://sike.org/ .
 	SIKEp434 ID = 0x01fd
+	/* -------------------------------- Modified -------------------------------- */
+	// Liboqs hybrids
+	P256_NTRU_HPS_2048_509 ID = 0x01fe
+	/* ----------------------------------- End ---------------------------------- */
 )
 
 // PrivateKey is a KEM private key.
@@ -98,6 +102,17 @@ func GenerateKey(rand io.Reader, kemID ID) (*PublicKey, *PrivateKey, error) {
 		publicKey.Export(pubBytes)
 		privateKey.Export(privBytes)
 		return &PublicKey{KEMId: kemID, PublicKey: pubBytes}, &PrivateKey{KEMId: kemID, PrivateKey: privBytes}, nil
+	/* -------------------------------- Modified -------------------------------- */
+	case P256_NTRU_HPS_2048_509:
+		scheme := getLiboqsScheme(kemID)
+		
+		pubBytes, privBytes, err := scheme.Keygen()
+		if err != nil {
+			return nil, nil, err
+		}
+
+		return &PublicKey{KEMId: kemID, PublicKey: pubBytes}, &PrivateKey{KEMId: kemID, PrivateKey: privBytes}, nil
+	/* ----------------------------------- End ---------------------------------- */	
 	default:
 		return nil, nil, fmt.Errorf("crypto/kem: internal error: unsupported KEM %d", kemID)
 	}
@@ -152,6 +167,17 @@ func Encapsulate(rand io.Reader, pk *PublicKey) (sharedSecret []byte, ciphertext
 			return nil, nil, err
 		}
 		return ss, ct, nil
+	/* -------------------------------- Modified -------------------------------- */
+	case P256_NTRU_HPS_2048_509:
+		scheme := getLiboqsScheme(pk.KEMId)
+		
+		ct, ss, err := scheme.Encapsulate(pk)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		return ss, ct, nil
+	/* ----------------------------------- End ---------------------------------- */
 	default:
 		return nil, nil, errors.New("crypto/kem: internal error: unsupported KEM in Encapsulate")
 	}
@@ -197,6 +223,17 @@ func Decapsulate(privateKey *PrivateKey, ciphertext []byte) (sharedSecret []byte
 		}
 
 		return ss, nil
+	/* -------------------------------- Modified -------------------------------- */
+	case P256_NTRU_HPS_2048_509:
+		scheme := getLiboqsScheme(privateKey.KEMId)
+		
+		ss, err := scheme.Decapsulate(privateKey, ciphertext)
+		if err != nil {
+			return nil, err
+		}
+
+		return ss, nil
+	/* ----------------------------------- End ---------------------------------- */
 	default:
 		return nil, errors.New("crypto/kem: internal error: unsupported KEM in Decapsulate")
 	}
