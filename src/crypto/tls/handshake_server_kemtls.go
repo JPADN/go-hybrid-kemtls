@@ -6,7 +6,8 @@ import (
 	"errors"
 	"sync/atomic"
 	/* -------------------------------- Modified -------------------------------- */
-	"fmt"
+	// JP: Secret Print
+	// "fmt"
 	/* ----------------------------------- End ---------------------------------- */
 )
 
@@ -95,7 +96,8 @@ func (hs *serverHandshakeStateTLS13) readClientKEMCiphertext() error {
 		}
 
 		/* -------------------------------- Modified -------------------------------- */
-		fmt.Printf("Server Auth (server side)\nKEMId: %x\nsharedKey:\n  %x\n\n", sk.KEMId, ss)
+		// JP: Secret Print
+		// fmt.Printf("Server Auth (server side)\nKEMId: %x\nsharedKey:\n  %x\n\n", sk.KEMId, ss)
 		/* ----------------------------------- End ---------------------------------- */
 
 		// derive AHS
@@ -235,7 +237,8 @@ func (hs *serverHandshakeStateTLS13) sendServerKEMCiphertext() error {
 	}
 
 	/* -------------------------------- Modified -------------------------------- */
-	fmt.Printf("Client Auth (server side)\nKEMId: %x\nsharedKey:\n  %x\n\n", pk.KEMId, ss)
+	// JP: Secret Print
+	// fmt.Printf("Client Auth (server side)\nKEMId: %x\nsharedKey:\n  %x\n\n", pk.KEMId, ss)
 	/* ----------------------------------- End ---------------------------------- */
 
 	msg := serverKeyExchangeMsg{

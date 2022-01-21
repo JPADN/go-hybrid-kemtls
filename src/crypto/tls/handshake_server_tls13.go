@@ -431,7 +431,8 @@ GroupSelection:
 		hs.sharedKey = sharedKey
 		hs.keyKEMShare = true
 		/* -------------------------------- Modified -------------------------------- */
-		fmt.Printf("Server KEX\nKEMId: %x\nsharedKey:\n  %x\n\n", kem.ID(selectedGroup), sharedKey)
+		// JP: Secret Print
+		// fmt.Printf("Server KEX\nKEMId: %x\nsharedKey:\n  %x\n\n", kem.ID(selectedGroup), sharedKey)
 		/* ----------------------------------- End ---------------------------------- */
 	} else {
 		if _, ok := curveForCurveID(selectedGroup); (selectedGroup != X25519 && !selectedGroup.isKEM()) && !ok {
