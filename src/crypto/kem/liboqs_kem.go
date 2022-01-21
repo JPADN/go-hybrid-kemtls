@@ -1,38 +1,11 @@
 package kem
 
-import (
-	"circl/hpke"
-	"circl/kem"
-	"fmt"
-
-	"github.com/open-quantum-safe/liboqs-go/oqs"
-)
-
-// Scheme for a Liboqs hybrid KEM.
-
-type liboqsScheme struct {
-	pqcName   string       // Passed as argument to oqs.KeyEncapsulation.Init()
-	classic   kem.Scheme
-	pqc 		  oqs.KeyEncapsulation
-}
-
-// JP: TODO: Should I use a pointer?
-var p256_ntru_hps_2048_509 liboqsScheme = liboqsScheme{
-	"NTRU-HPS-2048-509",
-	hpke.KEM_P256_HKDF_SHA256.Scheme(),
-	oqs.KeyEncapsulation{},
-}
-
-func getLiboqsScheme(kemID ID) liboqsScheme {
-	var scheme liboqsScheme
-	
-	switch kemID {
-	case P256_NTRU_HPS_2048_509:
-		scheme = p256_ntru_hps_2048_509
+func IsLiboqs(kemID ID) ID {
+	if kemID >= 0x0204 && kemID <= 0x020f {
+		return kemID
 	}
-	return scheme
+	return 0
 }
-
 
 func (sch *liboqsScheme) Keygen() ([]byte, []byte, error) {
 	
@@ -102,15 +75,6 @@ func (sch *liboqsScheme) Encapsulate(pk *PublicKey) ([]byte, []byte, error) {
 }
 
 func (sch *liboqsScheme) Decapsulate(sk *PrivateKey, ct []byte) ([]byte, error) {
-	
-	fmt.Println(len(sk.PrivateKey))
-	fmt.Println(cap(sk.PrivateKey))
-	fmt.Println(len(ct))
-	fmt.Println(cap(ct))
-	fmt.Println(sch.classic.PrivateKeySize())
-	fmt.Println(sch.pqc.Details().LengthSecretKey)
-	fmt.Println(sch.classic.CiphertextSize())
-	fmt.Println(sch.pqc.Details().LengthCiphertext)
 
 	classicSk := sk.PrivateKey[0:sch.classic.PrivateKeySize()]
 	pqcSk := sk.PrivateKey[sch.classic.PrivateKeySize():]

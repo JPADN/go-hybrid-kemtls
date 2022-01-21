@@ -130,11 +130,32 @@ const (
 	X25519    CurveID = 29
 	SIKEp434  CurveID = CurveID(kem.SIKEp434)
 	Kyber512  CurveID = CurveID(kem.Kyber512)
+	/* -------------------------------- Modified -------------------------------- */
+	// Liboqs Hybrids
+	P256_Kyber512  CurveID = CurveID(kem.P256_Kyber512)
+	P384_Kyber768  CurveID = CurveID(kem.P384_Kyber768)
+	P521_Kyber1024 CurveID = CurveID(kem.P521_Kyber1024)
+
+	P256_LightSaber_KEM CurveID = CurveID(kem.P256_LightSaber_KEM)
+	P384_Saber_KEM      CurveID = CurveID(kem.P384_Saber_KEM)
+	P521_FireSaber_KEM  CurveID = CurveID(kem.P521_FireSaber_KEM)
+
+	P256_NTRU_HPS_2048_509 CurveID = CurveID(kem.P256_NTRU_HPS_2048_509)
+	P384_NTRU_HPS_2048_677 CurveID = CurveID(kem.P384_NTRU_HPS_2048_677)
+	P521_NTRU_HPS_4096_821 CurveID = CurveID(kem.P521_NTRU_HPS_4096_821)
+
+	P521_NTRU_HPS_4096_1229 CurveID = CurveID(kem.P521_NTRU_HPS_4096_1229)
+
+	P384_NTRU_HRSS_701  CurveID = CurveID(kem.P384_NTRU_HRSS_701)
+	P521_NTRU_HRSS_1373 CurveID = CurveID(kem.P521_NTRU_HPS_4096_821)
+	/* ----------------------------------- End ---------------------------------- */
 )
 
 func (curve CurveID) isKEM() bool {
 	switch curve {
-	case SIKEp434, Kyber512:
+	/* -------------------------------- Modified -------------------------------- */
+	case SIKEp434, Kyber512, CurveID(kem.IsLiboqs(kem.ID(curve))):
+	/* ----------------------------------- End ---------------------------------- */	
 		return true
 	}
 	return false
@@ -211,6 +232,12 @@ var supportedSignatureAlgorithms = []SignatureScheme{
 	ECDSAWithP521AndSHA512,
 	PKCS1WithSHA1,
 	ECDSAWithSHA1,
+	/* -------------------------------- Modified -------------------------------- */
+	// Liboqs Hybrids
+	KEMTLSWithP256_Kyber512, KEMTLSWithP384_Kyber768, KEMTLSWithP521_Kyber1024, KEMTLSWithP256_LightSaber_KEM, KEMTLSWithP384_Saber_KEM, KEMTLSWithP521_FireSaber_KEM, 
+	KEMTLSWithP256_NTRU_HPS_2048_509, KEMTLSWithP384_NTRU_HPS_2048_677, KEMTLSWithP521_NTRU_HPS_4096_821, KEMTLSWithP521_NTRU_HPS_4096_1229, 
+	KEMTLSWithP384_NTRU_HRSS_701, KEMTLSWithP521_NTRU_HRSS_1373,
+	/* ----------------------------------- End ---------------------------------- */
 }
 
 // supportedSignatureAlgorithmsDC contains the signature and hash algorithms that
@@ -232,6 +259,13 @@ var supportedSignatureAlgorithmsDC = []SignatureScheme{
 	// Credentials.
 	PQTLSWithDilithium3,
 	PQTLSWithDilithium4,
+
+	/* -------------------------------- Modified -------------------------------- */
+	// Liboqs Hybrids
+	KEMTLSWithP256_Kyber512, KEMTLSWithP384_Kyber768, KEMTLSWithP521_Kyber1024, KEMTLSWithP256_LightSaber_KEM, KEMTLSWithP384_Saber_KEM, KEMTLSWithP521_FireSaber_KEM, 
+	KEMTLSWithP256_NTRU_HPS_2048_509, KEMTLSWithP384_NTRU_HPS_2048_677, KEMTLSWithP521_NTRU_HPS_4096_821, KEMTLSWithP521_NTRU_HPS_4096_1229, 
+	KEMTLSWithP384_NTRU_HRSS_701, KEMTLSWithP521_NTRU_HRSS_1373,
+	/* ----------------------------------- End ---------------------------------- */
 }
 
 // helloRetryRequestRandom is set as the Random value of a ServerHello
@@ -519,11 +553,53 @@ const (
 	// NOTE: Do not use outside of the experiment.
 	PQTLSWithDilithium3 SignatureScheme = 0xfe61
 	PQTLSWithDilithium4 SignatureScheme = 0xfe62
+
+	/* -------------------------------- Modified -------------------------------- */
+	// Liboqs Hybrids
+	KEMTLSWithP256_Kyber512 SignatureScheme = 0xfe6b
+	KEMTLSWithP384_Kyber768 SignatureScheme = 0xfe6c
+	KEMTLSWithP521_Kyber1024 SignatureScheme = 0xfe6d 
+	KEMTLSWithP256_LightSaber_KEM SignatureScheme = 0xfe6e
+	KEMTLSWithP384_Saber_KEM SignatureScheme = 0xfe6f
+	KEMTLSWithP521_FireSaber_KEM SignatureScheme = 0xfe70 
+	KEMTLSWithP256_NTRU_HPS_2048_509 SignatureScheme = 0xfe71 
+	KEMTLSWithP384_NTRU_HPS_2048_677 SignatureScheme = 0xfe72
+	KEMTLSWithP521_NTRU_HPS_4096_821 SignatureScheme = 0xfe73
+	KEMTLSWithP521_NTRU_HPS_4096_1229 SignatureScheme = 0xfe74
+	KEMTLSWithP384_NTRU_HRSS_701 SignatureScheme = 0xfe75
+	KEMTLSWithP521_NTRU_HRSS_1373 SignatureScheme = 0xfe76
+	/* ----------------------------------- End ---------------------------------- */
 )
+
+// Liboqs Hybrids
+/* -------------------------------- Modified -------------------------------- */
+var liboqsSignatureSchemeMap = map[kem.ID]SignatureScheme{kem.P256_Kyber512: KEMTLSWithP256_Kyber512, kem.P384_Kyber768: KEMTLSWithP384_Kyber768, kem.P521_Kyber1024: KEMTLSWithP521_Kyber1024,
+kem.P256_LightSaber_KEM: KEMTLSWithP256_LightSaber_KEM, kem.P384_Saber_KEM: KEMTLSWithP384_Saber_KEM, kem.P521_FireSaber_KEM: KEMTLSWithP521_FireSaber_KEM,
+kem.P256_NTRU_HPS_2048_509: KEMTLSWithP256_NTRU_HPS_2048_509, kem.P384_NTRU_HPS_2048_677: KEMTLSWithP384_NTRU_HPS_2048_677, kem.P521_NTRU_HPS_4096_821: KEMTLSWithP521_NTRU_HPS_4096_821, kem.P521_NTRU_HPS_4096_1229: KEMTLSWithP521_NTRU_HPS_4096_1229,
+kem.P384_NTRU_HRSS_701: KEMTLSWithP384_NTRU_HRSS_701, kem.P521_NTRU_HRSS_1373: KEMTLSWithP521_NTRU_HRSS_1373}
+
+func isLiboqsKEMSignature(scheme SignatureScheme) SignatureScheme {
+	if scheme >= 0xfe6b && scheme <= 0xfe76 {
+		return scheme
+	}
+	return 0
+}
+
+func liboqsKEMFromSignature(scheme SignatureScheme) kem.ID {
+	for key, value := range liboqsSignatureSchemeMap {
+		if value == scheme {
+			return key
+		}
+	}
+	return 0
+}
+/* ----------------------------------- End ---------------------------------- */
 
 func (scheme SignatureScheme) isKEMTLS() bool {
 	switch scheme {
-	case KEMTLSWithSIKEp434, KEMTLSWithKyber512:
+	/* -------------------------------- Modified -------------------------------- */
+	case KEMTLSWithSIKEp434, KEMTLSWithKyber512, isLiboqsKEMSignature(scheme):
+	/* ----------------------------------- End ---------------------------------- */	
 		return true
 	default:
 		return false

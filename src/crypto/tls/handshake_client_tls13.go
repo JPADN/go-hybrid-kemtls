@@ -629,7 +629,9 @@ func isKEMTLSAuthUsed(peerCertificate *x509.Certificate, cert Certificate) bool 
 	}
 
 	if kemPriv, ok := peerCertificate.PublicKey.(*kem.PublicKey); ok {
-		if kemPriv.KEMId == kem.SIKEp434 || kemPriv.KEMId == kem.Kyber512 {
+		/* -------------------------------- Modified -------------------------------- */
+		if kemPriv.KEMId == kem.SIKEp434 || kemPriv.KEMId == kem.Kyber512 || kem.IsLiboqs(kemPriv.KEMId) == kemPriv.KEMId {
+		/* ----------------------------------- End ---------------------------------- */		
 			return true
 		}
 	}

@@ -22,8 +22,23 @@ const (
 	// SIKEp434 is a post-quantum KEM, as defined in: https://sike.org/ .
 	SIKEp434 ID = 0x01fd
 	/* -------------------------------- Modified -------------------------------- */
-	// Liboqs hybrids
-	P256_NTRU_HPS_2048_509 ID = 0x01fe
+	// Liboqs Hybrids
+	P256_Kyber512  ID = 0x0204
+	P384_Kyber768  ID = 0x0205
+	P521_Kyber1024 ID = 0x0206
+
+	P256_LightSaber_KEM ID = 0x0207
+	P384_Saber_KEM      ID = 0x0208
+	P521_FireSaber_KEM  ID = 0x0209
+
+	P256_NTRU_HPS_2048_509 ID = 0x020a
+	P384_NTRU_HPS_2048_677 ID = 0x020b
+	P521_NTRU_HPS_4096_821 ID = 0x020c
+
+	P521_NTRU_HPS_4096_1229 ID = 0x020d
+
+	P384_NTRU_HRSS_701  ID = 0x020e
+	P521_NTRU_HRSS_1373 ID = 0x020f
 	/* ----------------------------------- End ---------------------------------- */
 )
 
@@ -103,16 +118,16 @@ func GenerateKey(rand io.Reader, kemID ID) (*PublicKey, *PrivateKey, error) {
 		privateKey.Export(privBytes)
 		return &PublicKey{KEMId: kemID, PublicKey: pubBytes}, &PrivateKey{KEMId: kemID, PrivateKey: privBytes}, nil
 	/* -------------------------------- Modified -------------------------------- */
-	case P256_NTRU_HPS_2048_509:
-		scheme := getLiboqsScheme(kemID)
-		
+	case IsLiboqs(kemID):
+		scheme := liboqsSchemeMap[kemID]
+
 		pubBytes, privBytes, err := scheme.Keygen()
 		if err != nil {
 			return nil, nil, err
 		}
 
 		return &PublicKey{KEMId: kemID, PublicKey: pubBytes}, &PrivateKey{KEMId: kemID, PrivateKey: privBytes}, nil
-	/* ----------------------------------- End ---------------------------------- */	
+	/* ----------------------------------- End ---------------------------------- */
 	default:
 		return nil, nil, fmt.Errorf("crypto/kem: internal error: unsupported KEM %d", kemID)
 	}
@@ -168,9 +183,9 @@ func Encapsulate(rand io.Reader, pk *PublicKey) (sharedSecret []byte, ciphertext
 		}
 		return ss, ct, nil
 	/* -------------------------------- Modified -------------------------------- */
-	case P256_NTRU_HPS_2048_509:
-		scheme := getLiboqsScheme(pk.KEMId)
-		
+	case IsLiboqs(pk.KEMId):
+		scheme := liboqsSchemeMap[pk.KEMId]
+
 		ct, ss, err := scheme.Encapsulate(pk)
 		if err != nil {
 			return nil, nil, err
@@ -224,9 +239,9 @@ func Decapsulate(privateKey *PrivateKey, ciphertext []byte) (sharedSecret []byte
 
 		return ss, nil
 	/* -------------------------------- Modified -------------------------------- */
-	case P256_NTRU_HPS_2048_509:
-		scheme := getLiboqsScheme(privateKey.KEMId)
-		
+	case IsLiboqs(privateKey.KEMId):
+		scheme := liboqsSchemeMap[privateKey.KEMId]
+
 		ss, err := scheme.Decapsulate(privateKey, ciphertext)
 		if err != nil {
 			return nil, err
