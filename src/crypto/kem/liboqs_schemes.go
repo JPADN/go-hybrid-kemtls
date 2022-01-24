@@ -101,3 +101,10 @@ var liboqsSchemeMap = map[ID]liboqsHybridScheme{P256_Kyber512: p256_kyber512, P3
 	P256_LightSaber_KEM: p256_lightsaber_kem, P384_Saber_KEM: p384_saber_kem, P521_FireSaber_KEM: p521_firesaber_kem,
 	P256_NTRU_HPS_2048_509: p256_ntru_hps_2048_509, P384_NTRU_HPS_2048_677: p384_ntru_hps_2048_677, P521_NTRU_HPS_4096_821: p521_ntru_hps_4096_821, P521_NTRU_HPS_4096_1229: p521_ntru_hps_4096_1229,
 	P384_NTRU_HRSS_701: p384_ntru_hrss_701, P521_NTRU_HRSS_1373: p521_ntru_hrss_1373}
+
+var liboqsPQCKEMString = map[ID]string {
+		OQS_Kyber512: "Kyber512", OQS_Kyber768: "Kyber768", OQS_Kyber1024: "Kyber1024",
+		LightSaber_KEM: "LightSaber_KEM", Saber_KEM: "Saber_KEM", FireSaber_KEM: "FireSaber_KEM", 
+		NTRU_HPS_2048_509: "NTRU_HPS_2048_509", NTRU_HPS_2048_677: "NTRU_HPS_2048_677", NTRU_HPS_4096_821: "NTRU_HPS_4096_821",
+		NTRU_HPS_4096_1229: "NTRU_HPS_4096_1229", NTRU_HRSS_701: "NTRU_HRSS_701", NTRU_HRSS_1373: "NTRU_HRSS_1373",
+}

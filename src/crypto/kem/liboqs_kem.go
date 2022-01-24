@@ -1,10 +1,17 @@
 package kem
 
 func IsLiboqs(kemID ID) ID {
-	if kemID >= 0x0204 && kemID <= 0x020f {
+	if kemID >= P256_Kyber512 && kemID <= NTRU_HRSS_1373 {
 		return kemID
 	}
 	return 0
+}
+
+func isPQCLiboqs(kemID ID) bool {
+	if kemID >= OQS_Kyber512 && kemID <= NTRU_HRSS_1373 {
+		return true
+	}
+	return false
 }
 
 func (sch *liboqsHybridScheme) Keygen() ([]byte, []byte, error) {
