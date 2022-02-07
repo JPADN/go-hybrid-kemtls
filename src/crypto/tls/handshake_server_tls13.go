@@ -982,7 +982,7 @@ func (hs *serverHandshakeStateTLS13) sendServerCertificate() error {
 		certVerifyMsg.hasSignatureAlgorithm = true
 		certVerifyMsg.signatureAlgorithm = hs.sigAlg
 
-		sigType, sigHash, err := typeAndHashFromSignatureScheme(certVerifyMsg.signatureAlgorithm)
+		sigType, sigHash, err := typeAndHashFromSignatureScheme(certVerifyMsg.signatureAlgorithm)  // JP | Info: AUTH
 		if err != nil {
 			return c.sendAlert(alertInternalError)
 		}
@@ -1009,7 +1009,7 @@ func (hs *serverHandshakeStateTLS13) sendServerCertificate() error {
 			}
 		} else {
 			var err error
-			sig, err = hs.cert.PrivateKey.(crypto.Signer).Sign(c.config.rand(), signed, signOpts)
+			sig, err = hs.cert.PrivateKey.(crypto.Signer).Sign(c.config.rand(), signed, signOpts)  // JP | Info: AUTH
 			if err != nil {
 				public := hs.cert.PrivateKey.(crypto.Signer).Public()
 				if rsaKey, ok := public.(*rsa.PublicKey); ok && sigType == signatureRSAPSS &&

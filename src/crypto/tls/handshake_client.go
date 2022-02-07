@@ -10,6 +10,9 @@ import (
 	"crypto/ecdsa"
 	"crypto/ed25519"
 	"crypto/kem"
+	/* -------------------------------- Modified -------------------------------- */
+	"crypto/liboqs_sig"
+	/* ----------------------------------- End ---------------------------------- */
 	"crypto/rsa"
 	"crypto/subtle"
 	"crypto/x509"
@@ -1034,7 +1037,9 @@ func (c *Conn) verifyServerCertificate(certificates [][]byte) error {
 	}
 
 	switch certs[0].PublicKey.(type) {
-	case *rsa.PublicKey, *ecdsa.PublicKey, ed25519.PublicKey, circlSign.PublicKey, *kem.PublicKey:
+	/* -------------------------------- Modified -------------------------------- */
+	case *rsa.PublicKey, *ecdsa.PublicKey, ed25519.PublicKey, circlSign.PublicKey, *kem.PublicKey, *liboqs_sig.PublicKey:
+	/* ----------------------------------- End ---------------------------------- */	
 		break
 	default:
 		c.sendAlert(alertUnsupportedCertificate)

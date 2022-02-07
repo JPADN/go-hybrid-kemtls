@@ -12,6 +12,9 @@ import (
 	"crypto/ed25519"
 	"crypto/elliptic"
 	"crypto/kem"
+	/* -------------------------------- Modified -------------------------------- */
+	"crypto/liboqs_sig"
+	/* ----------------------------------- End ---------------------------------- */	
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha512"
@@ -226,6 +229,9 @@ const (
 	signatureEdDilithium3
 	signatureEdDilithium4
 	authKEMTLS // for the KEMTLS
+	/* -------------------------------- Modified -------------------------------- */
+	authPQTLSLiboqs
+	/* ----------------------------------- End ---------------------------------- */
 )
 
 // directSigning is a standard Hash value that signals that no pre-hashing
@@ -259,6 +265,9 @@ var supportedSignatureAlgorithms = []SignatureScheme{
 	// Liboqs PQC
 	KEMTLSWithOQS_Kyber512, KEMTLSWithOQS_Kyber768, KEMTLSWithOQS_Kyber1024, KEMTLSWithLightSaber_KEM, KEMTLSWithSaber_KEM, KEMTLSWithFireSaber_KEM, 
 	KEMTLSWithNTRU_HPS_2048_509, KEMTLSWithNTRU_HPS_2048_677, KEMTLSWithNTRU_HPS_4096_821, KEMTLSWithNTRU_HPS_4096_1229, KEMTLSWithNTRU_HRSS_701, KEMTLSWithNTRU_HRSS_1373,	
+
+	// Liboqs Hybrid Signature  // JP - Info: AUTH
+	P256_Dilithium2,
 
 	/* ----------------------------------- End ---------------------------------- */
 }
@@ -609,11 +618,17 @@ const (
 	KEMTLSWithNTRU_HPS_4096_1229 SignatureScheme = 0xfe75
 	KEMTLSWithNTRU_HRSS_701 SignatureScheme = 0xfe76
 	KEMTLSWithNTRU_HRSS_1373 SignatureScheme = 0xfe77
+
+	// JP: Liboqs Hybrid Signatures
+	P256_Dilithium2 SignatureScheme = 0xfe78
+
 	/* ----------------------------------- End ---------------------------------- */
 )
 
 // Liboqs Hybrids
 /* -------------------------------- Modified -------------------------------- */
+
+// Hybrid KEMTLS Authentication
 var liboqsSignatureSchemeMap = map[kem.ID]SignatureScheme{
 	kem.P256_Kyber512: KEMTLSWithP256_Kyber512, kem.P384_Kyber768: KEMTLSWithP384_Kyber768, kem.P521_Kyber1024: KEMTLSWithP521_Kyber1024,
 	kem.P256_LightSaber_KEM: KEMTLSWithP256_LightSaber_KEM, kem.P384_Saber_KEM: KEMTLSWithP384_Saber_KEM, kem.P521_FireSaber_KEM: KEMTLSWithP521_FireSaber_KEM,
@@ -640,6 +655,31 @@ func liboqsKEMFromSignature(scheme SignatureScheme) kem.ID {
 	}
 	return 0
 }
+
+
+// Hybrid PQTLS Authentication
+
+var liboqsSigSignatureSchemeMap = map[liboqs_sig.ID]SignatureScheme {
+	liboqs_sig.P256_Dilithium2: P256_Dilithium2,
+}
+
+func isLiboqsSigSignature(scheme SignatureScheme) SignatureScheme {
+	if scheme >= P256_Dilithium2 && scheme <= P256_Dilithium2 {
+		return scheme
+	}
+	return 0
+}
+
+func classicFromHybridSig(scheme SignatureScheme) SignatureScheme {
+	if scheme >= P256_Dilithium2 && scheme <= P256_Dilithium2 {
+		return ECDSAWithP256AndSHA256
+	}
+	// JP - TODO: Do for others curves
+
+	return 0
+}
+
+
 /* ----------------------------------- End ---------------------------------- */
 
 func (scheme SignatureScheme) isKEMTLS() bool {

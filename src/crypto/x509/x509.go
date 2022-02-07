@@ -40,6 +40,9 @@ import (
 
 	"golang.org/x/crypto/cryptobyte"
 	cryptobyte_asn1 "golang.org/x/crypto/cryptobyte/asn1"
+	/* -------------------------------- Modified -------------------------------- */
+	"crypto/liboqs_sig"
+	/* ----------------------------------- End ---------------------------------- */
 )
 
 // pkixPublicKey reflects a PKIX public key structure. See SubjectPublicKeyInfo
@@ -115,6 +118,12 @@ func marshalPublicKey(pub interface{}) (publicKeyBytes []byte, publicKeyAlgorith
 	case *kem.PublicKey:
 		publicKeyBytes, _ = pub.MarshalBinary()
 		publicKeyAlgorithm.Algorithm = oidPublicKeyKEMTLS
+	/* -------------------------------- Modified -------------------------------- */	
+	case *liboqs_sig.PublicKey:
+		publicKeyBytes = pub.MarshalBinary()		
+		// JP - TODO: Create OID
+		publicKeyAlgorithm.Algorithm = oidPublicKeyKEMTLS  
+	/* ----------------------------------- End ---------------------------------- */
 	default:
 		return nil, pkix.AlgorithmIdentifier{}, fmt.Errorf("x509: unsupported public key type: %T", pub)
 	}

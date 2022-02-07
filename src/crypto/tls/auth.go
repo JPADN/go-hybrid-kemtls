@@ -19,6 +19,9 @@ import (
 	"fmt"
 	"hash"
 	"io"
+	/* -------------------------------- Modified -------------------------------- */
+	"crypto/liboqs_sig"
+	/* ----------------------------------- End ---------------------------------- */
 )
 
 // verifyHandshakeSignature verifies a signature against pre-hashed
@@ -58,6 +61,21 @@ func verifyHandshakeSignature(sigType uint8, pubkey crypto.PublicKey, hashFunc c
 		if err := rsa.VerifyPSS(pubKey, hashFunc, signed, sig, signOpts); err != nil {
 			return err
 		}
+	/* -------------------------------- Modified -------------------------------- */
+	case authPQTLSLiboqs:  // JP | Info: AUTH
+		pubKey, ok := pubkey.(*liboqs_sig.PublicKey)
+		if !ok {
+			return fmt.Errorf("expected a Liboqs Signature public key, got %T", pubkey)
+		}
+
+		// JP - TODO: log error
+		valid, _ := pubKey.Verify(signed, sig)
+
+		if !valid {
+			return fmt.Errorf("Verification failure")
+		}
+
+	/* ----------------------------------- End ---------------------------------- */	
 	default:
 		scheme := circlSchemeBySigType(sigType)
 		if scheme == nil {
@@ -130,6 +148,9 @@ func typeAndHashFromSignatureScheme(signatureAlgorithm SignatureScheme) (sigType
 	/* -------------------------------- Modified -------------------------------- */
 	case isLiboqsKEMSignature(signatureAlgorithm):
 		sigType = authKEMTLS
+	case isLiboqsSigSignature(signatureAlgorithm):				
+		sigType = authPQTLSLiboqs  	
+		// JP - Info: AUTH
 	/* ----------------------------------- End ---------------------------------- */
 	default:
 		scheme := circlPki.SchemeByTLSID(uint(signatureAlgorithm))
@@ -159,7 +180,19 @@ func typeAndHashFromSignatureScheme(signatureAlgorithm SignatureScheme) (sigType
 		hash = directSigning
 	/* -------------------------------- Modified -------------------------------- */
 	case isLiboqsKEMSignature(signatureAlgorithm):
-		sigType = authKEMTLS
+		hash = directSigning
+	case isLiboqsSigSignature(signatureAlgorithm):
+		classicSig := classicFromHybridSig(signatureAlgorithm)
+		switch classicSig {
+		case ECDSAWithP256AndSHA256:
+			hash = crypto.SHA256
+		case ECDSAWithP384AndSHA384:
+			hash = crypto.SHA384
+		case ECDSAWithP521AndSHA512:
+			hash = crypto.SHA512			
+		default:
+			hash = directSigning  // Just for completeness
+		}		
 	/* ----------------------------------- End ---------------------------------- */
 	default:
 		scheme := circlPki.SchemeByTLSID(uint(signatureAlgorithm))
@@ -282,6 +315,8 @@ func signatureSchemesForCertificate(version uint16, cert *Certificate) []Signatu
 				return nil
 			}
 			sigAlgs = []SignatureScheme{SignatureScheme(tlsScheme.TLSIdentifier())}
+		case liboqs_sig.PublicKey:
+			sigAlgs = []SignatureScheme{liboqsSigSignatureSchemeMap[pub.SigId]}
 		default:
 			return nil
 		}
