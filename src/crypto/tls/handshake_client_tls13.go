@@ -660,7 +660,7 @@ func isPQTLSAuthUsed(peerCertificate *x509.Certificate, cert Certificate) bool {
 
 	/* -------------------------------- Modified -------------------------------- */	
 	if hybridPQCPub, ok := peerCertificate.PublicKey.(*liboqs_sig.PublicKey); ok {
-		if hybridPQCPub.SigId >= liboqs_sig.P256_Dilithium2 && hybridPQCPub.SigId <= liboqs_sig.P256_Dilithium2 {
+		if hybridPQCPub.SigId >= liboqs_sig.P256_Dilithium2 && hybridPQCPub.SigId <= liboqs_sig.P521_RainbowVClassic {
 			return true
 		}
 	}	

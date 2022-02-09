@@ -17,21 +17,27 @@ import (
 type ID uint16
 
 const (
-	P256_Dilithium2 ID = 0x01fb
+	P256_Dilithium2 ID = 0x21c
+	P256_Falcon512 ID = 0x21d
+	P256_RainbowIClassic ID = 0x21e
+	
+	P384_Dilithium3 ID = 0x21f
+	P384_RainbowIIIClassic ID = 0x220
+	
+	P521_Dilithium5 ID = 0x221
+	P521_Falcon1024 ID = 0x222
+	P521_RainbowVClassic ID = 0x223
 )
 
-// type LiboqsHybridSig struct {
-// 	pqcName string  // Passed as argument to oqs.KeyEncapsulation.Init()
-// 	classic elliptic.Curve
-// 	pqc     oqs.Signature
-// }
 
+// Hybrid Signature public key
 type PublicKey struct {
 	SigId ID
 	classic *ecdsa.PublicKey 
 	pqc []byte
 }
 
+// Hybrid Signature private key
 type PrivateKey struct {
 	SigId ID
 	classic *ecdsa.PrivateKey	
@@ -197,20 +203,23 @@ func GenerateKey(sigId ID) (*PublicKey, *PrivateKey, error) {
 }
 
 
-// Returns classical curve and public key size
+// Returns classical curve and public key size for the corresponding curve
 func classicFromSig(sigId ID) (elliptic.Curve, int) {
 	switch true {
-	case sigId >= P256_Dilithium2 && sigId <= P256_Dilithium2:
+	case sigId >= P256_Dilithium2 && sigId <= P256_RainbowIClassic:
 		return elliptic.P256(), 65
+	case sigId >= P384_Dilithium3 && sigId <= P384_RainbowIIIClassic:
+		return elliptic.P384(), 97
+	case sigId >= P521_Dilithium5 && sigId <= P521_RainbowVClassic:
+		return elliptic.P521(), 133
 	default:
 		return nil, 0
 	}
-
-	// P384 -> 97
-	// P384 -> 133
 }
 
 
 var sigIdtoName = map[ID]string {
-	P256_Dilithium2: "Dilithium2",
+	P256_Dilithium2: "Dilithium2", P256_Falcon512: "Falcon-512", P256_RainbowIClassic: "Rainbow-I-Classic", 
+	P384_Dilithium3: "Dilithium3", P384_RainbowIIIClassic: "Rainbow-III-Classic", 
+	P521_Dilithium5: "Dilithium5", P521_Falcon1024: "Falcon-1024", P521_RainbowVClassic: "Rainbow-V-Classic",
 }
