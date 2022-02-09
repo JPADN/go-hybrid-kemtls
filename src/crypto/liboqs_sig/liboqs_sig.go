@@ -43,8 +43,8 @@ type PrivateKey struct {
 // Private Key methods
 // Implementing the crypto.Signer interface
 
-func (priv *PrivateKey) Public() *PublicKey {
-	return priv.hybridPub
+func (priv *PrivateKey) Public() crypto.PublicKey {
+	return *priv.hybridPub
 }
 
 
@@ -92,13 +92,41 @@ func (pub *PublicKey) MarshalBinary() ([]byte) {
 	return b.BytesOrPanic()
 }
 
+func (pub *PublicKey) UnmarshalBinary(raw []byte) error {
+
+	var classicPubSize int
+	
+	pub.SigId = ID(binary.BigEndian.Uint16(raw[:2]))
+	
+	pub.classic = new(ecdsa.PublicKey)
+	pub.classic.Curve, classicPubSize = classicFromSig(pub.SigId) 
+
+	classicBytes := raw[2:2 + classicPubSize]
+	pqcBytes := raw[2 + classicPubSize:]
+
+	pub.classic.X, pub.classic.Y =	elliptic.Unmarshal(pub.classic.Curve, classicBytes)
+	if pub.classic.X == nil {
+		return errors.New("error in unmarshal ecdsa public key")
+	}	
+	
+	pub.pqc = pqcBytes
+
+	return nil
+}
+
+
 func (pub *PublicKey) Verify(signed, sig []byte) (bool, error) {
 
-	classicSize := binary.BigEndian.Uint16(sig[:2])
-	classicSig := sig[2:classicSize]
+	classicSize := binary.BigEndian.Uint16(sig[:2])		
+	classicSig := sig[2:2 + classicSize]	
 
-	pqcSize := binary.BigEndian.Uint16(sig[classicSize:classicSize+2])
-	pqcSig := sig[classicSize+2:pqcSize]
+	current := 2 + classicSize
+
+	pqcSize := binary.BigEndian.Uint16(sig[current:current + 2])
+	
+	current = current + 2
+	
+	pqcSig := sig[current:current + pqcSize]
 
 	classicValid := ecdsa.VerifyASN1(pub.classic, signed, classicSig)
 
@@ -125,14 +153,7 @@ func (pub *PublicKey) Verify(signed, sig []byte) (bool, error) {
 
 func GenerateKey(sigId ID) (*PublicKey, *PrivateKey, error) {
 
-	var curve elliptic.Curve
-
-	switch true {
-	case sigId >= P256_Dilithium2 && sigId <= P256_Dilithium2:
-		curve = elliptic.P256()
-	default:
-		return nil, nil, errors.New("bad signature id")		
-	}
+	curve, _ := classicFromSig(sigId)
 
 	// Classic
 	classicPriv, err := ecdsa.GenerateKey(curve, rand.Reader)
@@ -176,31 +197,18 @@ func GenerateKey(sigId ID) (*PublicKey, *PrivateKey, error) {
 }
 
 
-// func (sch *LiboqsHybridSig) GenerateKey() (*PublicKey, *PrivateKey, error) {
+// Returns classical curve and public key size
+func classicFromSig(sigId ID) (elliptic.Curve, int) {
+	switch true {
+	case sigId >= P256_Dilithium2 && sigId <= P256_Dilithium2:
+		return elliptic.P256(), 65
+	default:
+		return nil, 0
+	}
 
-// 	// Classic
-// 	classicPriv, err := ecdsa.GenerateKey(sch.classic, rand.Reader)
-// 	if err != nil {
-// 		return nil, nil, err
-// 	}
-
-// 	classicPub := classicPriv.Public()
-
-// 	// PQC
-
-// 	if err := sch.pqc.Init(sch.pqcName, nil); err != nil {
-// 		return nil, nil, err
-// 	}
-
-// 	pqcPub, err := sch.pqc.GenerateKeyPair()
-// 	if err != nil {
-// 	}
-
-// 	pqcPriv := sch.pqc.ExportSecretKey()
-
-// 	// JP - TODO: Check this return. Where is the PublicKey in the memory?
-// 	return &PublicKey{classic: classicPub, pqc: pqcPub}, &PrivateKey{classic: classicPriv, pqc: pqcPriv, hybridPub: }, nil
-// }
+	// P384 -> 97
+	// P384 -> 133
+}
 
 
 var sigIdtoName = map[ID]string {

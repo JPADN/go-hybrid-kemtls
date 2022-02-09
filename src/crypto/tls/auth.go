@@ -67,9 +67,11 @@ func verifyHandshakeSignature(sigType uint8, pubkey crypto.PublicKey, hashFunc c
 		if !ok {
 			return fmt.Errorf("expected a Liboqs Signature public key, got %T", pubkey)
 		}
-
-		// JP - TODO: log error
-		valid, _ := pubKey.Verify(signed, sig)
+		
+		valid, err := pubKey.Verify(signed, sig)
+		if err != nil {
+			return err
+		}
 
 		if !valid {
 			return fmt.Errorf("Verification failure")

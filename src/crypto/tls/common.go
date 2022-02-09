@@ -695,7 +695,7 @@ func (scheme SignatureScheme) isKEMTLS() bool {
 
 func (scheme SignatureScheme) isPQTLS() bool {
 	switch scheme {
-	case PQTLSWithDilithium3, PQTLSWithDilithium4:
+	case PQTLSWithDilithium3, PQTLSWithDilithium4, isLiboqsSigSignature(scheme):
 		return true
 	default:
 		return false

@@ -120,9 +120,8 @@ func marshalPublicKey(pub interface{}) (publicKeyBytes []byte, publicKeyAlgorith
 		publicKeyAlgorithm.Algorithm = oidPublicKeyKEMTLS
 	/* -------------------------------- Modified -------------------------------- */	
 	case *liboqs_sig.PublicKey:
-		publicKeyBytes = pub.MarshalBinary()		
-		// JP - TODO: Create OID
-		publicKeyAlgorithm.Algorithm = oidPublicKeyKEMTLS  
+		publicKeyBytes = pub.MarshalBinary()				
+		publicKeyAlgorithm.Algorithm = oidPublicKeyPQTLS  
 	/* ----------------------------------- End ---------------------------------- */
 	default:
 		return nil, pkix.AlgorithmIdentifier{}, fmt.Errorf("x509: unsupported public key type: %T", pub)
@@ -258,6 +257,9 @@ const (
 	EdDilithium3
 	EdDilithium4
 	KEMTLS
+	/* -------------------------------- Modified -------------------------------- */
+	PQTLS
+	/* ----------------------------------- End ---------------------------------- */
 )
 
 var publicKeyAlgoName = [...]string{
@@ -269,6 +271,9 @@ var publicKeyAlgoName = [...]string{
 	EdDilithium3: "Ed25519-Dilithium3",
 	EdDilithium4: "Ed448-Dilithium4",
 	KEMTLS:       "KEMTLS",
+	/* -------------------------------- Modified -------------------------------- */
+	PQTLS:        "PQTLS",
+	/* ----------------------------------- End ---------------------------------- */
 }
 
 func (algo PublicKeyAlgorithm) String() string {
@@ -491,6 +496,10 @@ var (
 	oidPublicKeyEdDilithium3 = asn1.ObjectIdentifier{1, 3, 6, 1, 4, 1, 44363, 45, 9}  // Cloudflare OID
 	oidPublicKeyEdDilithium4 = asn1.ObjectIdentifier{1, 3, 6, 1, 4, 1, 44363, 45, 10} // Cloudflare OID
 	oidPublicKeyKEMTLS       = asn1.ObjectIdentifier{1, 3, 6, 1, 4, 1, 44363, 45, 11} // Cloudflare OID
+	/* -------------------------------- Modified -------------------------------- */
+	oidPublicKeyPQTLS       = asn1.ObjectIdentifier{1, 3, 6, 1, 4, 1, 44363, 45, 12}
+	/* ----------------------------------- End ---------------------------------- */
+	
 )
 
 func getPublicKeyAlgorithmFromOID(oid asn1.ObjectIdentifier) PublicKeyAlgorithm {
@@ -511,6 +520,10 @@ func getPublicKeyAlgorithmFromOID(oid asn1.ObjectIdentifier) PublicKeyAlgorithm 
 		return EdDilithium4
 	case oid.Equal(oidPublicKeyKEMTLS):
 		return KEMTLS
+	/* -------------------------------- Modified -------------------------------- */
+	case oid.Equal(oidPublicKeyPQTLS):
+		return PQTLS
+	/* ----------------------------------- End ---------------------------------- */	
 	default:
 		scheme := circlPki.SchemeByOid(oid)
 		if scheme == nil {
@@ -1086,6 +1099,15 @@ func parsePublicKey(algo PublicKeyAlgorithm, keyData *publicKeyInfo) (interface{
 			return nil, errors.New("x509: wrong KEM identifier")
 		}
 		return pub, nil
+	/* -------------------------------- Modified -------------------------------- */
+	case PQTLS:
+		pub := new(liboqs_sig.PublicKey)
+		err := pub.UnmarshalBinary(keyData.PublicKey.Bytes)
+		if err != nil {
+			return nil, errors.New("x509: wrong KEM identifier")
+		}
+		return pub, nil
+	/* ----------------------------------- End ---------------------------------- */
 	default:
 		if scheme := CirclSchemeByPublicKeyAlgorithm(algo); scheme != nil {
 			if len(keyData.Algorithm.Parameters.FullBytes) != 0 {
