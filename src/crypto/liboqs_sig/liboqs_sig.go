@@ -8,7 +8,6 @@ import (
 	"errors"
 	"io"
 	"crypto/rand"
-
 	"github.com/open-quantum-safe/liboqs-go/oqs"
 	"golang.org/x/crypto/cryptobyte"
 )
@@ -217,6 +216,18 @@ func classicFromSig(sigId ID) (elliptic.Curve, int) {
 	}
 }
 
+func HashFromSig(sigId ID) (crypto.Hash, error) {
+	switch true {
+	case sigId >= P256_Dilithium2 && sigId <= P256_RainbowIClassic:
+		return crypto.SHA256, nil
+	case sigId >= P384_Dilithium3 && sigId <= P384_RainbowIIIClassic:
+		return crypto.SHA384, nil
+	case sigId >= P521_Dilithium5 && sigId <= P521_RainbowVClassic:
+		return crypto.SHA512, nil
+	default:
+		return crypto.SHA256, errors.New("unknown signature ID")
+	}
+}
 
 var sigIdtoName = map[ID]string {
 	P256_Dilithium2: "Dilithium2", P256_Falcon512: "Falcon-512", P256_RainbowIClassic: "Rainbow-I-Classic", 
