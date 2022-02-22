@@ -104,7 +104,7 @@ func (pub *PublicKey) UnmarshalBinary(raw []byte) error {
 	pub.SigId = ID(binary.BigEndian.Uint16(raw[:2]))
 	
 	pub.classic = new(ecdsa.PublicKey)
-	pub.classic.Curve, classicPubSize = classicFromSig(pub.SigId) 
+	pub.classic.Curve, classicPubSize = ClassicFromSig(pub.SigId) 
 
 	classicBytes := raw[2:2 + classicPubSize]
 	pqcBytes := raw[2 + classicPubSize:]
@@ -158,7 +158,7 @@ func (pub *PublicKey) Verify(signed, sig []byte) (bool, error) {
 
 func GenerateKey(sigId ID) (*PublicKey, *PrivateKey, error) {
 
-	curve, _ := classicFromSig(sigId)
+	curve, _ := ClassicFromSig(sigId)
 
 	// Classic
 	classicPriv, err := ecdsa.GenerateKey(curve, rand.Reader)
@@ -202,8 +202,17 @@ func GenerateKey(sigId ID) (*PublicKey, *PrivateKey, error) {
 }
 
 
+func ConstructPublicKey(_sigID ID, _classic *ecdsa.PublicKey, _pqc []byte) *PublicKey {
+	return &PublicKey{SigId: _sigID, classic: _classic, pqc: _pqc}
+}
+
+func ConstructPrivateKey(_sigID ID, _classic *ecdsa.PrivateKey, _pqc []byte, _hybridPub *PublicKey) *PrivateKey {
+	return &PrivateKey{SigId: _sigID, classic: _classic, pqc: _pqc, hybridPub: _hybridPub}
+}
+
+
 // Returns classical curve and public key size for the corresponding curve
-func classicFromSig(sigId ID) (elliptic.Curve, int) {
+func ClassicFromSig(sigId ID) (elliptic.Curve, int) {
 	switch true {
 	case sigId >= P256_Dilithium2 && sigId <= P256_RainbowIClassic:
 		return elliptic.P256(), 65
