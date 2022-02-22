@@ -41,7 +41,7 @@ func ParseECPrivateKeyWithOID(namedCurveOID *asn1.ObjectIdentifier, der []byte) 
 }
 
 func OidFromNamedCurve(curve elliptic.Curve) (asn1.ObjectIdentifier, bool) {
-	return OidFromNamedCurve(curve)
+	return oidFromNamedCurve(curve)
 }
 /* ----------------------------------- End ---------------------------------- */
 

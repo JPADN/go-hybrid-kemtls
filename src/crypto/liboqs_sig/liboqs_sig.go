@@ -201,13 +201,28 @@ func GenerateKey(sigId ID) (*PublicKey, *PrivateKey, error) {
 	return pub, priv, nil
 }
 
-
+// This function is only called in our tests.
+// Used in the unmarshalling of the hybrid root CA certificate and keys
 func ConstructPublicKey(_sigID ID, _classic *ecdsa.PublicKey, _pqc []byte) *PublicKey {
 	return &PublicKey{SigId: _sigID, classic: _classic, pqc: _pqc}
 }
 
+// This function is only called in our tests.
+// Used in the unmarshalling of the hybrid root CA certificate and keys
 func ConstructPrivateKey(_sigID ID, _classic *ecdsa.PrivateKey, _pqc []byte, _hybridPub *PublicKey) *PrivateKey {
 	return &PrivateKey{SigId: _sigID, classic: _classic, pqc: _pqc, hybridPub: _hybridPub}
+}
+
+// This function is only called in our tests.
+// Used in the marshalling of the hybrid root CA certificate and keys
+func GetPrivateKeyMembers(priv *PrivateKey) (*ecdsa.PrivateKey, []byte, *PublicKey){
+	return priv.classic, priv.pqc, priv.hybridPub
+}
+
+// This function is only called in our tests.
+// Used in the marshalling of the hybrid root CA certificate and keys
+func GetPublicKeyMembers(pub *PublicKey) (*ecdsa.PublicKey, []byte){
+	return pub.classic, pub.pqc
 }
 
 
