@@ -14,7 +14,7 @@ import (
 	"crypto/kem"
 	/* -------------------------------- Modified -------------------------------- */
 	"crypto/liboqs_sig"
-	/* ----------------------------------- End ---------------------------------- */	
+	/* ----------------------------------- End ---------------------------------- */
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha512"
@@ -172,6 +172,8 @@ const (
 
 	NTRU_HRSS_701  CurveID = CurveID(kem.NTRU_HRSS_701)
 	NTRU_HRSS_1373 CurveID = CurveID(kem.NTRU_HRSS_1373)
+
+	P256_Classic_McEliece_348864 CurveID = CurveID(kem.P256_Classic_McEliece_348864)
 	/* ----------------------------------- End ---------------------------------- */
 )
 
@@ -263,7 +265,7 @@ var supportedSignatureAlgorithms = []SignatureScheme{
 	// Liboqs Hybrids
 	KEMTLSWithP256_Kyber512, KEMTLSWithP384_Kyber768, KEMTLSWithP521_Kyber1024, KEMTLSWithP256_LightSaber_KEM, KEMTLSWithP384_Saber_KEM, KEMTLSWithP521_FireSaber_KEM, 
 	KEMTLSWithP256_NTRU_HPS_2048_509, KEMTLSWithP384_NTRU_HPS_2048_677, KEMTLSWithP521_NTRU_HPS_4096_821, KEMTLSWithP521_NTRU_HPS_4096_1229, 
-	KEMTLSWithP384_NTRU_HRSS_701, KEMTLSWithP521_NTRU_HRSS_1373,
+	KEMTLSWithP384_NTRU_HRSS_701, KEMTLSWithP521_NTRU_HRSS_1373, KEMTLSWithP256_Classic_McEliece_348864,
 
 	// Liboqs PQC
 	KEMTLSWithOQS_Kyber512, KEMTLSWithOQS_Kyber768, KEMTLSWithOQS_Kyber1024, KEMTLSWithLightSaber_KEM, KEMTLSWithSaber_KEM, KEMTLSWithFireSaber_KEM, 
@@ -299,7 +301,7 @@ var supportedSignatureAlgorithmsDC = []SignatureScheme{
 	// Liboqs Hybrids
 	KEMTLSWithP256_Kyber512, KEMTLSWithP384_Kyber768, KEMTLSWithP521_Kyber1024, KEMTLSWithP256_LightSaber_KEM, KEMTLSWithP384_Saber_KEM, KEMTLSWithP521_FireSaber_KEM, 
 	KEMTLSWithP256_NTRU_HPS_2048_509, KEMTLSWithP384_NTRU_HPS_2048_677, KEMTLSWithP521_NTRU_HPS_4096_821, KEMTLSWithP521_NTRU_HPS_4096_1229, 
-	KEMTLSWithP384_NTRU_HRSS_701, KEMTLSWithP521_NTRU_HRSS_1373,
+	KEMTLSWithP384_NTRU_HRSS_701, KEMTLSWithP521_NTRU_HRSS_1373, KEMTLSWithP256_Classic_McEliece_348864,
 
 	// Liboqs PQC
 	KEMTLSWithOQS_Kyber512, KEMTLSWithOQS_Kyber768, KEMTLSWithOQS_Kyber1024, KEMTLSWithLightSaber_KEM, KEMTLSWithSaber_KEM, KEMTLSWithFireSaber_KEM, 
@@ -632,6 +634,8 @@ const (
 	PQTLS_P521_Falcon1024 SignatureScheme = 0xfe7e
 	PQTLS_P521_RainbowVClassic SignatureScheme = 0xfe7f
 
+	KEMTLSWithP256_Classic_McEliece_348864 SignatureScheme = 0xfe80
+
 	/* ----------------------------------- End ---------------------------------- */
 )
 
@@ -643,7 +647,7 @@ var liboqsSignatureSchemeMap = map[kem.ID]SignatureScheme{
 	kem.P256_Kyber512: KEMTLSWithP256_Kyber512, kem.P384_Kyber768: KEMTLSWithP384_Kyber768, kem.P521_Kyber1024: KEMTLSWithP521_Kyber1024,
 	kem.P256_LightSaber_KEM: KEMTLSWithP256_LightSaber_KEM, kem.P384_Saber_KEM: KEMTLSWithP384_Saber_KEM, kem.P521_FireSaber_KEM: KEMTLSWithP521_FireSaber_KEM,
 	kem.P256_NTRU_HPS_2048_509: KEMTLSWithP256_NTRU_HPS_2048_509, kem.P384_NTRU_HPS_2048_677: KEMTLSWithP384_NTRU_HPS_2048_677, kem.P521_NTRU_HPS_4096_821: KEMTLSWithP521_NTRU_HPS_4096_821, kem.P521_NTRU_HPS_4096_1229: KEMTLSWithP521_NTRU_HPS_4096_1229,
-	kem.P384_NTRU_HRSS_701: KEMTLSWithP384_NTRU_HRSS_701, kem.P521_NTRU_HRSS_1373: KEMTLSWithP521_NTRU_HRSS_1373,
+	kem.P384_NTRU_HRSS_701: KEMTLSWithP384_NTRU_HRSS_701, kem.P521_NTRU_HRSS_1373: KEMTLSWithP521_NTRU_HRSS_1373, kem.P256_Classic_McEliece_348864: KEMTLSWithP256_Classic_McEliece_348864,
 	kem.OQS_Kyber512: KEMTLSWithOQS_Kyber512, kem.OQS_Kyber768: KEMTLSWithOQS_Kyber768, kem.OQS_Kyber1024: KEMTLSWithOQS_Kyber1024, 
 	kem.LightSaber_KEM: KEMTLSWithLightSaber_KEM, kem.Saber_KEM: KEMTLSWithSaber_KEM, kem.FireSaber_KEM: KEMTLSWithFireSaber_KEM, 
 	kem.NTRU_HPS_2048_509: KEMTLSWithNTRU_HPS_2048_509, kem.NTRU_HPS_2048_677: KEMTLSWithNTRU_HPS_2048_677, kem.NTRU_HPS_4096_821: KEMTLSWithNTRU_HPS_4096_821, 
