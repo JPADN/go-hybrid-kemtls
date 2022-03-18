@@ -277,8 +277,39 @@ func (hs *serverHandshakeStateTLS13) processClientHello() error {
 							hs.hello.pdkKEMTLS = true
 						}
 					}
-				}
+				}			
+			/* -------------------------------- Modified -------------------------------- */			
+			} else {								
+				
+				certMsg := new(certificateMsgTLS13)
+
+				certMsg.certificate = *hs.cert
+				certMsg.scts = hs.clientHello.scts && len(hs.cert.SignedCertificateTimestamps) > 0
+				certMsg.ocspStapling = hs.clientHello.ocspStapling && len(hs.cert.OCSPStaple) > 0
+				certMsg.delegatedCredential = hs.clientHello.delegatedCredentialSupported && len(hs.cert.DelegatedCredential) > 0
+
+				certMsgRaw := certMsg.marshal()
+				cachedCertHash := calculateHashCachedInfo(certMsgRaw)
+				
+				if bytes.Equal(cachedCertHash, hs.clientHello.cachedInformationCertHash) {
+					hs.hello.cachedInformationCert = true					
+	
+					sk, ok1 := hs.cert.PrivateKey.(*kem.PrivateKey)
+					if !ok1 {
+						c.sendAlert(alertInternalError)
+						return errors.New("crypto/tls: private key unexpectedly of wrong type")
+					}
+
+					ss, err := kem.Decapsulate(sk, hs.clientHello.ciphertextKEMTLS)
+					if err != nil {
+						return err
+					}
+					hs.pdkKEMTLS = true
+					hs.ssKEMTLS = ss
+					hs.hello.pdkKEMTLS = true
+				}				
 			}
+			/* ----------------------------------- End ---------------------------------- */
 		}
 	}
 

@@ -135,14 +135,28 @@ func (c *Conn) makeClientHello(minVersion uint16) (*clientHelloMsg, []clientKeyS
 			}
 
 			if isKEMTLSAuthUsed(c.peerCertificates[0], certMsg.certificate) {
-				if certMsg.delegatedCredential {
+				var pk *kem.PublicKey
+				var ok bool
+				
+				if certMsg.delegatedCredential {					
 					if err := processCachedDelegatedCredentialFromServer(c, config.SupportDelegatedCredential, certMsg.certificate.DelegatedCredential, nil); err != nil {
 						return nil, nil, nil, err
 					}
-				}
-				pk, ok := c.verifiedDC.cred.publicKey.(*kem.PublicKey)
-				if !ok {
-					return nil, nil, nil, errors.New("tls: invalid key")
+
+					pk, ok = c.verifiedDC.cred.publicKey.(*kem.PublicKey)
+					if !ok {
+						return nil, nil, nil, errors.New("tls: invalid key")
+					}
+				} else {					
+					x509Cert, err := x509.ParseCertificate(certMsg.certificate.Certificate[0])
+					if err != nil {
+						return nil, nil, nil, errors.New("tls: invalid key")
+					}
+	
+					pk, ok = x509Cert.PublicKey.(*kem.PublicKey)
+					if !ok {
+						return nil, nil, nil, errors.New("tls: invalid key")
+					}
 				}
 
 				var err error
