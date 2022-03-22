@@ -118,6 +118,8 @@ type CFEventTLS13ClientHandshakeTimingInfo struct {
 	ReadKEMCiphertext  time.Duration
 	FullProtocol       time.Duration
 
+	SendAppData        time.Duration
+
 	ExperimentName string
 }
 

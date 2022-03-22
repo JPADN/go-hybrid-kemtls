@@ -29,6 +29,10 @@ func (hs *clientHandshakeStateTLS13) handshakeKEMTLS() error {
 		if _, err := c.flush(); err != nil {
 			return err
 		}
+
+		// This expression is the same from hs.handshakeTimings.finish() method
+		hs.handshakeTimings.SendAppData = hs.handshakeTimings.timer().Sub(hs.handshakeTimings.total)
+
 		hs.handshakeTimings.reset()
 	} else {
 		if err := hs.sendClientKEMCiphertext(); err != nil {
@@ -56,10 +60,13 @@ func (hs *clientHandshakeStateTLS13) handshakeKEMTLS() error {
 			return err
 		}
 
+		// This expression is the same from hs.handshakeTimings.finish() method
+		hs.handshakeTimings.SendAppData = hs.handshakeTimings.timer().Sub(hs.handshakeTimings.total)
+
 		if _, err := c.flush(); err != nil {
 			return err
 		}
-		// thrid round for KEMTLS
+		// third round for KEMTLS
 		hs.handshakeTimings.reset()
 		if err := hs.processKEMTLSServerFinished(); err != nil {
 			return err
