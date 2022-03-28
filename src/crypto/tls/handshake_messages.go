@@ -1473,6 +1473,51 @@ type certificateMsgTLS13 struct {
 	delegatedCredential bool
 }
 
+// When the cached info specification is used, then a modified version
+// of the Certificate message is exchanged. The modified structure is
+// shown in Figure 1.
+
+// struct {
+// 	opaque hash_value<1..255>;
+// } Certificate;
+
+// Figure 1: Cached Info Certificate Message
+
+type certificateMsgTLS13CachedInfo struct {
+	raw []byte
+	hash_value []byte
+}
+
+func (m *certificateMsgTLS13CachedInfo) marshal() []byte {	
+	if m.raw != nil {
+		return m.raw
+	}
+	
+	var b cryptobyte.Builder
+
+	b.AddUint8(typeCertificateCachedInfo)
+	b.AddUint24(32)  // Length prefixed value
+	b.AddBytes(m.hash_value)	
+	
+	m.raw = b.BytesOrPanic()
+
+	return m.raw	
+}
+
+func (m *certificateMsgTLS13CachedInfo) unmarshal(data []byte) bool {
+	*m = certificateMsgTLS13CachedInfo{raw: data}
+	s := cryptobyte.String(data)
+	var hash_value []byte		
+	
+	// s.Skip(4) skips message type and 24 bit length prefix
+	if !s.Skip(4) || !s.ReadBytes(&hash_value, 32) {  
+		return false
+	}
+
+	m.hash_value = hash_value
+	return true
+}
+
 func (m *certificateMsgTLS13) marshal() []byte {
 	if m.raw != nil {
 		return m.raw

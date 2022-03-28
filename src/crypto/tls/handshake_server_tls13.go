@@ -29,6 +29,9 @@ type serverHandshakeStateTLS13 struct {
 	hello        *serverHelloMsg
 	sentDummyCCS bool
 	usingPSK     bool
+	
+	usingCachedInformation bool  // RFC 7924: Cached Information Extension
+	certHash []byte 						 // RFC 7924: Cached Information Extension
 
 	keyKEMShare        bool
 	isKEMTLS           bool
@@ -197,32 +200,33 @@ func (hs *serverHandshakeStateTLS13) processClientHello() error {
 	}
 
 	if hs.clientHello.cachedInformationCert {
-		if c.config.KEMTLSEnabled {
-			// signature_algorithms is required in TLS 1.3. See RFC 8446, Section 4.2.3.
-			if len(hs.clientHello.supportedSignatureAlgorithms) == 0 {
-				return c.sendAlert(alertMissingExtension)
+
+		// signature_algorithms is required in TLS 1.3. See RFC 8446, Section 4.2.3.
+		if len(hs.clientHello.supportedSignatureAlgorithms) == 0 {
+			return c.sendAlert(alertMissingExtension)
+		}
+
+		certificate, err := c.config.getCertificate(clientHelloInfo(c, hs.clientHello))
+		if err != nil {
+			if err == errNoCertificates {
+				c.sendAlert(alertUnrecognizedName)
+			} else {
+				c.sendAlert(alertInternalError)
 			}
+			return err
+		}
 
-			certificate, err := c.config.getCertificate(clientHelloInfo(c, hs.clientHello))
-			if err != nil {
-				if err == errNoCertificates {
-					c.sendAlert(alertUnrecognizedName)
-				} else {
-					c.sendAlert(alertInternalError)
-				}
-				return err
-			}
+		hs.sigAlg, err = selectSignatureScheme(c.vers, certificate, hs.clientHello.supportedSignatureAlgorithms)
+		if err != nil {
+			// getCertificate returned a certificate that is unsupported or
+			// incompatible with the client's signature algorithms.
+			c.sendAlert(alertHandshakeFailure)
+			return err
+		}
 
-			hs.sigAlg, err = selectSignatureScheme(c.vers, certificate, hs.clientHello.supportedSignatureAlgorithms)
-			if err != nil {
-				// getCertificate returned a certificate that is unsupported or
-				// incompatible with the client's signature algorithms.
-				c.sendAlert(alertHandshakeFailure)
-				return err
-			}
+		hs.cert = certificate
 
-			hs.cert = certificate
-
+		if c.config.KEMTLSEnabled {			
 			if hs.clientHello.delegatedCredentialSupported && len(hs.clientHello.supportedSignatureAlgorithmsDC) > 0 {
 				delegatedCredentialPair, err := getDelegatedCredential(clientHelloInfo(c, hs.clientHello), hs.cert)
 				if err != nil {
@@ -310,6 +314,23 @@ func (hs *serverHandshakeStateTLS13) processClientHello() error {
 				}				
 			}
 			/* ----------------------------------- End ---------------------------------- */
+		} else {
+			certMsg := new(certificateMsgTLS13)
+
+			certMsg.certificate = *hs.cert
+			certMsg.scts = hs.clientHello.scts && len(hs.cert.SignedCertificateTimestamps) > 0
+			certMsg.ocspStapling = hs.clientHello.ocspStapling && len(hs.cert.OCSPStaple) > 0
+			certMsg.delegatedCredential = hs.clientHello.delegatedCredentialSupported && len(hs.cert.DelegatedCredential) > 0
+
+			certMsgRaw := certMsg.marshal()
+			cachedCertHash := calculateHashCachedInfo(certMsgRaw)
+			
+			if bytes.Equal(cachedCertHash, hs.clientHello.cachedInformationCertHash) {
+				hs.hello.cachedInformationCert = true
+				hs.certHash = cachedCertHash
+				
+				hs.usingCachedInformation = true				
+			}				
 		}
 	}
 
@@ -658,6 +679,10 @@ func (hs *serverHandshakeStateTLS13) pickCertificate() error {
 		return nil
 	}
 
+	if hs.usingCachedInformation {
+		return nil
+	}
+
 	// signature_algorithms is required in TLS 1.3. See RFC 8446, Section 4.2.3.
 	if len(hs.clientHello.supportedSignatureAlgorithms) == 0 {
 		return c.sendAlert(alertMissingExtension)
@@ -1000,11 +1025,26 @@ func (hs *serverHandshakeStateTLS13) sendServerCertificate() error {
 	certMsg.ocspStapling = hs.clientHello.ocspStapling && len(hs.cert.OCSPStaple) > 0
 	certMsg.delegatedCredential = hs.clientHello.delegatedCredentialSupported && len(hs.cert.DelegatedCredential) > 0
 
+	c.certificateMessage = certMsg.marshal()
+
+	if hs.usingCachedInformation && hs.certHash != nil {
+		cachedCertMsg := new(certificateMsgTLS13CachedInfo)
+		cachedCertMsg.hash_value = hs.certHash 
+		hs.transcript.Write(cachedCertMsg.marshal())
+
+		if _, err := c.writeRecord(recordTypeHandshake, cachedCertMsg.marshal()); err != nil {
+			return err
+		}		
+	
+		hs.handshakeTimings.WriteCertificate = hs.handshakeTimings.elapsedTime()
+
+		return nil
+	}
+
 	hs.transcript.Write(certMsg.marshal())
 	if _, err := c.writeRecord(recordTypeHandshake, certMsg.marshal()); err != nil {
 		return err
 	}
-	c.certificateMessage = certMsg.marshal()
 
 	hs.handshakeTimings.WriteCertificate = hs.handshakeTimings.elapsedTime()
 

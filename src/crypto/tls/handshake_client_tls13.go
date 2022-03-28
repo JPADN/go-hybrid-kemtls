@@ -710,6 +710,12 @@ func (hs *clientHandshakeStateTLS13) readServerCertificate() error {
 		}
 	}
 
+	cachedCertMsg, ok := msg.(*certificateMsgTLS13CachedInfo)
+	if ok {
+		hs.transcript.Write(cachedCertMsg.marshal())				
+		return nil
+	}
+
 	certMsg, ok := msg.(*certificateMsgTLS13)
 	if !ok {
 		c.sendAlert(alertUnexpectedMessage)

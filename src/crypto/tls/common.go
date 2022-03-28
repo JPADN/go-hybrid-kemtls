@@ -78,6 +78,7 @@ const (
 	typeServerHelloDone     uint8 = 14
 	typeCertificateVerify   uint8 = 15
 	typeClientKeyExchange   uint8 = 16
+	typeCertificateCachedInfo uint8 = 17  // Unassigned number. https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml#tls-parameters-7	
 	typeFinished            uint8 = 20
 	typeCertificateStatus   uint8 = 22
 	typeKeyUpdate           uint8 = 24

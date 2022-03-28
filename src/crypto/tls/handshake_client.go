@@ -169,6 +169,30 @@ func (c *Conn) makeClientHello(minVersion uint16) (*clientHelloMsg, []clientKeyS
 				pdkKEMTLS = true
 				ciphertextKEMTLS = ct
 			}
+		} else {
+
+			certMsg := new(certificateMsgTLS13)
+			data := append([]byte(nil), config.CachedCert...)
+
+			if !certMsg.unmarshal(data) {
+				return nil, nil, nil, errors.New("tls: wrong cached certificates message")
+			}
+
+			if len(certMsg.certificate.Certificate) == 0 {
+				c.sendAlert(alertDecodeError)
+				return nil, nil, nil, errors.New("tls: wrong cached certificates message")
+			}			
+
+			c.scts = certMsg.certificate.SignedCertificateTimestamps
+			c.ocspResponse = certMsg.certificate.OCSPStaple
+
+			if err := c.verifyServerCertificate(certMsg.certificate.Certificate); err != nil {
+				return nil, nil, nil, err
+			}
+
+			if isPQTLSAuthUsed(c.peerCertificates[0], certMsg.certificate) {
+				c.didPQTLS = true				
+			}
 		}
 	}
 
