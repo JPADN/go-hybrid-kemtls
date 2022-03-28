@@ -15,8 +15,6 @@ type liboqsHybridScheme struct {
 	pqc     oqs.KeyEncapsulation
 }
 
-// JP: TODO: Should I use a pointer?
-
 /* ---------------------------------- Kyber --------------------------------- */
 
 var p256_kyber512 liboqsHybridScheme = liboqsHybridScheme{

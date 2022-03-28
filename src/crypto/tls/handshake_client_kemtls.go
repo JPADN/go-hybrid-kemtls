@@ -9,10 +9,8 @@ import (
 	"crypto/kem"
 	"errors"
 	"sync/atomic"
-	/* -------------------------------- Modified -------------------------------- */
-	// JP: Secret Print
+	// Secret Print
 	// "fmt"
-	/* ----------------------------------- End ---------------------------------- */
 )
 
 func (hs *clientHandshakeStateTLS13) handshakeKEMTLS() error {
@@ -107,10 +105,8 @@ func (hs *clientHandshakeStateTLS13) sendClientKEMCiphertext() error {
 			return err
 		}
 
-		/* -------------------------------- Modified -------------------------------- */
-		// JP: Secret Print
+		// Secret Print
 		// fmt.Printf("Server Auth (client side)\nKEMId: %x\nsharedKey:\n  %x\n\n", pk.KEMId, ss)
-		/* ----------------------------------- End ---------------------------------- */
 
 		msg := clientKeyExchangeMsg{
 			ciphertext: ct,
@@ -264,10 +260,8 @@ func (hs *clientHandshakeStateTLS13) readServerKEMCiphertext() error {
 		return err
 	}
 
-	/* -------------------------------- Modified -------------------------------- */
-	// JP: Secret Print
+	// Secret Print
 	// fmt.Printf("Client Auth (client side)\nKEMId: %x\nsharedKey:\n  %x\n\n", sk.KEMId, ss)
-	/* ----------------------------------- End ---------------------------------- */
 
 	// compute MS
 	// MS <- HKDF.Extract(dAHS, ssC)

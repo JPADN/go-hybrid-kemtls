@@ -89,10 +89,9 @@ func (pub *PublicKey) MarshalBinary() ([]byte) {
 	
 	classicPubBytes := elliptic.Marshal(pub.classic.Curve, pub.classic.X, pub.classic.Y)
 		
-	// JP - Info: Following MarshalBinary() in crypto/kem
 	b.AddUint16(uint16(pub.SigId))
-	b.AddBytes(classicPubBytes)  // JP: Classic bytes
-	b.AddBytes(pub.pqc)  // JP: PQC bytes
+	b.AddBytes(classicPubBytes)  // Classic bytes
+	b.AddBytes(pub.pqc)  // PQC bytes
 
 	return b.BytesOrPanic()
 }

@@ -10,9 +10,7 @@ import (
 	"golang.org/x/crypto/cryptobyte"
 	"golang.org/x/crypto/curve25519"
 
-	/* -------------------------------- Modified -------------------------------- */
 	"github.com/open-quantum-safe/liboqs-go/oqs"
-	/* ----------------------------------- End ---------------------------------- */)
 
 // ID identifies each type of KEM.
 type ID uint16
@@ -24,7 +22,6 @@ const (
 	Kyber512 ID = 0x01fc
 	// SIKEp434 is a post-quantum KEM, as defined in: https://sike.org/ .
 	SIKEp434 ID = 0x01fd
-	/* -------------------------------- Modified -------------------------------- */
 	// Liboqs Hybrids
 	P256_Kyber512  ID = 0x0204
 	P384_Kyber768  ID = 0x0205
@@ -62,7 +59,6 @@ const (
 	NTRU_HRSS_1373 ID = 0x021b
 
 	P256_Classic_McEliece_348864 ID = 0x021c
-	/* ----------------------------------- End ---------------------------------- */
 )
 
 // PrivateKey is a KEM private key.
@@ -140,7 +136,6 @@ func GenerateKey(rand io.Reader, kemID ID) (*PublicKey, *PrivateKey, error) {
 		publicKey.Export(pubBytes)
 		privateKey.Export(privBytes)
 		return &PublicKey{KEMId: kemID, PublicKey: pubBytes}, &PrivateKey{KEMId: kemID, PrivateKey: privBytes}, nil
-	/* -------------------------------- Modified -------------------------------- */
 	case IsLiboqs(kemID):
 
 		var pubBytes, privBytes []byte
@@ -167,7 +162,6 @@ func GenerateKey(rand io.Reader, kemID ID) (*PublicKey, *PrivateKey, error) {
 		}
 		return &PublicKey{KEMId: kemID, PublicKey: pubBytes}, &PrivateKey{KEMId: kemID, PrivateKey: privBytes}, nil
 
-	/* ----------------------------------- End ---------------------------------- */
 	default:
 		return nil, nil, fmt.Errorf("crypto/kem: internal error: unsupported KEM %d", kemID)
 	}
@@ -222,7 +216,6 @@ func Encapsulate(rand io.Reader, pk *PublicKey) (sharedSecret []byte, ciphertext
 			return nil, nil, err
 		}
 		return ss, ct, nil
-	/* -------------------------------- Modified -------------------------------- */
 	case IsLiboqs(pk.KEMId):
 
 		var ss, ct []byte
@@ -250,7 +243,6 @@ func Encapsulate(rand io.Reader, pk *PublicKey) (sharedSecret []byte, ciphertext
 		}
 
 		return ss, ct, nil
-	/* ----------------------------------- End ---------------------------------- */
 	default:
 		return nil, nil, errors.New("crypto/kem: internal error: unsupported KEM in Encapsulate")
 	}
@@ -296,7 +288,6 @@ func Decapsulate(privateKey *PrivateKey, ciphertext []byte) (sharedSecret []byte
 		}
 
 		return ss, nil
-	/* -------------------------------- Modified -------------------------------- */
 	case IsLiboqs(privateKey.KEMId):
 		var ss []byte
 		var err error
@@ -323,7 +314,6 @@ func Decapsulate(privateKey *PrivateKey, ciphertext []byte) (sharedSecret []byte
 		}
 
 		return ss, nil
-	/* ----------------------------------- End ---------------------------------- */
 	default:
 		return nil, errors.New("crypto/kem: internal error: unsupported KEM in Decapsulate")
 	}

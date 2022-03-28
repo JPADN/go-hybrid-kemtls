@@ -19,9 +19,7 @@ import (
 	"fmt"
 	"hash"
 	"io"
-	/* -------------------------------- Modified -------------------------------- */
 	"crypto/liboqs_sig"
-	/* ----------------------------------- End ---------------------------------- */
 )
 
 // verifyHandshakeSignature verifies a signature against pre-hashed
@@ -61,8 +59,7 @@ func verifyHandshakeSignature(sigType uint8, pubkey crypto.PublicKey, hashFunc c
 		if err := rsa.VerifyPSS(pubKey, hashFunc, signed, sig, signOpts); err != nil {
 			return err
 		}
-	/* -------------------------------- Modified -------------------------------- */
-	case authPQTLSLiboqs:  // JP | Info: AUTH
+	case authPQTLSLiboqs:
 		pubKey, ok := pubkey.(*liboqs_sig.PublicKey)
 		if !ok {
 			return fmt.Errorf("expected a Liboqs Signature public key, got %T", pubkey)
@@ -77,7 +74,6 @@ func verifyHandshakeSignature(sigType uint8, pubkey crypto.PublicKey, hashFunc c
 			return fmt.Errorf("Verification failure")
 		}
 
-	/* ----------------------------------- End ---------------------------------- */	
 	default:
 		scheme := circlSchemeBySigType(sigType)
 		if scheme == nil {
@@ -147,13 +143,10 @@ func typeAndHashFromSignatureScheme(signatureAlgorithm SignatureScheme) (sigType
 		sigType = signatureEdDilithium3
 	case PQTLSWithDilithium4:
 		sigType = signatureEdDilithium4
-	/* -------------------------------- Modified -------------------------------- */
 	case isLiboqsKEMSignature(signatureAlgorithm):
 		sigType = authKEMTLS
 	case isLiboqsSigSignature(signatureAlgorithm):				
-		sigType = authPQTLSLiboqs  	
-		// JP - Info: AUTH
-	/* ----------------------------------- End ---------------------------------- */
+		sigType = authPQTLSLiboqs		
 	default:
 		scheme := circlPki.SchemeByTLSID(uint(signatureAlgorithm))
 		if scheme == nil {
@@ -180,7 +173,6 @@ func typeAndHashFromSignatureScheme(signatureAlgorithm SignatureScheme) (sigType
 		hash = directSigning
 	case PQTLSWithDilithium3, PQTLSWithDilithium4:
 		hash = directSigning
-	/* -------------------------------- Modified -------------------------------- */
 	case isLiboqsKEMSignature(signatureAlgorithm):
 		hash = directSigning
 	case isLiboqsSigSignature(signatureAlgorithm):
@@ -195,7 +187,6 @@ func typeAndHashFromSignatureScheme(signatureAlgorithm SignatureScheme) (sigType
 		default:
 			hash = directSigning  // Just for completeness
 		}		
-	/* ----------------------------------- End ---------------------------------- */
 	default:
 		scheme := circlPki.SchemeByTLSID(uint(signatureAlgorithm))
 		if scheme == nil {
@@ -259,7 +250,6 @@ func signatureSchemesForCertificate(version uint16, cert *Certificate) []Signatu
 	// 	return nil
 	// }
 	
-	/* -------------------------------- Modified -------------------------------- */
 	var sigAlgs []SignatureScheme
 
 	_, ok := cert.PrivateKey.(*kem.PrivateKey)
@@ -324,7 +314,6 @@ func signatureSchemesForCertificate(version uint16, cert *Certificate) []Signatu
 		}
 	}
 
-	/* ----------------------------------- End ---------------------------------- */
 
 	if cert.SupportedSignatureAlgorithms != nil {
 		var filteredSigAlgs []SignatureScheme
@@ -359,10 +348,8 @@ func signatureSchemeForDelegatedCredential(version uint16, dc *DelegatedCredenti
 			sigAlgs = []SignatureScheme{KEMTLSWithSIKEp434}
 		case kem.Kyber512:
 			sigAlgs = []SignatureScheme{KEMTLSWithKyber512}
-		/* -------------------------------- Modified -------------------------------- */
 		case kem.IsLiboqs(pk.KEMId):
 			sigAlgs = []SignatureScheme{liboqsSignatureSchemeMap[pk.KEMId]}
-		/* ----------------------------------- End ---------------------------------- */
 		default:
 			return nil
 		}

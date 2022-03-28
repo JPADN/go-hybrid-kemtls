@@ -12,9 +12,7 @@ import (
 	"crypto/ed25519"
 	"crypto/elliptic"
 	"crypto/kem"
-	/* -------------------------------- Modified -------------------------------- */
 	"crypto/liboqs_sig"
-	/* ----------------------------------- End ---------------------------------- */
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha512"
@@ -48,9 +46,7 @@ const (
 	maxCiphertextTLS13 = 16384 + 256  // maximum ciphertext length in TLS 1.3
 	recordHeaderLen    = 5            // record header length
 	// maxHandshake       = 65536        // maximum handshake we support (protocol max is 16 MB)
-	/* -------------------------------- Modified -------------------------------- */
 	maxHandshake       = 10000000
-	/* ----------------------------------- End ---------------------------------- */
 	maxUselessRecords  = 16           // maximum number of consecutive non-advancing records
 )
 
@@ -137,7 +133,6 @@ const (
 	X25519    CurveID = 29
 	SIKEp434  CurveID = CurveID(kem.SIKEp434)
 	Kyber512  CurveID = CurveID(kem.Kyber512)
-	/* -------------------------------- Modified -------------------------------- */
 	// Liboqs Hybrids
 	P256_Kyber512  CurveID = CurveID(kem.P256_Kyber512)
 	P384_Kyber768  CurveID = CurveID(kem.P384_Kyber768)
@@ -175,14 +170,11 @@ const (
 	NTRU_HRSS_1373 CurveID = CurveID(kem.NTRU_HRSS_1373)
 
 	P256_Classic_McEliece_348864 CurveID = CurveID(kem.P256_Classic_McEliece_348864)
-	/* ----------------------------------- End ---------------------------------- */
 )
 
 func (curve CurveID) isKEM() bool {
 	switch curve {
-	/* -------------------------------- Modified -------------------------------- */
 	case SIKEp434, Kyber512, CurveID(kem.IsLiboqs(kem.ID(curve))):
-	/* ----------------------------------- End ---------------------------------- */	
 		return true
 	}
 	return false
@@ -235,9 +227,7 @@ const (
 	signatureEdDilithium3
 	signatureEdDilithium4
 	authKEMTLS // for the KEMTLS
-	/* -------------------------------- Modified -------------------------------- */
 	authPQTLSLiboqs
-	/* ----------------------------------- End ---------------------------------- */
 )
 
 // directSigning is a standard Hash value that signals that no pre-hashing
@@ -262,7 +252,6 @@ var supportedSignatureAlgorithms = []SignatureScheme{
 	ECDSAWithP521AndSHA512,
 	PKCS1WithSHA1,
 	ECDSAWithSHA1,
-	/* -------------------------------- Modified -------------------------------- */
 	// Liboqs Hybrids
 	KEMTLSWithP256_Kyber512, KEMTLSWithP384_Kyber768, KEMTLSWithP521_Kyber1024, KEMTLSWithP256_LightSaber_KEM, KEMTLSWithP384_Saber_KEM, KEMTLSWithP521_FireSaber_KEM, 
 	KEMTLSWithP256_NTRU_HPS_2048_509, KEMTLSWithP384_NTRU_HPS_2048_677, KEMTLSWithP521_NTRU_HPS_4096_821, KEMTLSWithP521_NTRU_HPS_4096_1229, 
@@ -272,10 +261,9 @@ var supportedSignatureAlgorithms = []SignatureScheme{
 	KEMTLSWithOQS_Kyber512, KEMTLSWithOQS_Kyber768, KEMTLSWithOQS_Kyber1024, KEMTLSWithLightSaber_KEM, KEMTLSWithSaber_KEM, KEMTLSWithFireSaber_KEM, 
 	KEMTLSWithNTRU_HPS_2048_509, KEMTLSWithNTRU_HPS_2048_677, KEMTLSWithNTRU_HPS_4096_821, KEMTLSWithNTRU_HPS_4096_1229, KEMTLSWithNTRU_HRSS_701, KEMTLSWithNTRU_HRSS_1373,	
 
-	// Liboqs Hybrid Signature  // JP - Info: AUTH
+	// Liboqs Hybrid Signature
 	PQTLS_P256_Dilithium2, PQTLS_P256_Falcon512, PQTLS_P256_RainbowIClassic, PQTLS_P384_Dilithium3, PQTLS_P384_RainbowIIIClassic, PQTLS_P521_Dilithium5, PQTLS_P521_Falcon1024, PQTLS_P521_RainbowVClassic,
 
-	/* ----------------------------------- End ---------------------------------- */
 }
 
 // supportedSignatureAlgorithmsDC contains the signature and hash algorithms that
@@ -298,7 +286,6 @@ var supportedSignatureAlgorithmsDC = []SignatureScheme{
 	PQTLSWithDilithium3,
 	PQTLSWithDilithium4,
 
-	/* -------------------------------- Modified -------------------------------- */
 	// Liboqs Hybrids
 	KEMTLSWithP256_Kyber512, KEMTLSWithP384_Kyber768, KEMTLSWithP521_Kyber1024, KEMTLSWithP256_LightSaber_KEM, KEMTLSWithP384_Saber_KEM, KEMTLSWithP521_FireSaber_KEM, 
 	KEMTLSWithP256_NTRU_HPS_2048_509, KEMTLSWithP384_NTRU_HPS_2048_677, KEMTLSWithP521_NTRU_HPS_4096_821, KEMTLSWithP521_NTRU_HPS_4096_1229, 
@@ -307,7 +294,6 @@ var supportedSignatureAlgorithmsDC = []SignatureScheme{
 	// Liboqs PQC
 	KEMTLSWithOQS_Kyber512, KEMTLSWithOQS_Kyber768, KEMTLSWithOQS_Kyber1024, KEMTLSWithLightSaber_KEM, KEMTLSWithSaber_KEM, KEMTLSWithFireSaber_KEM, 
 	KEMTLSWithNTRU_HPS_2048_509, KEMTLSWithNTRU_HPS_2048_677, KEMTLSWithNTRU_HPS_4096_821, KEMTLSWithNTRU_HPS_4096_1229, KEMTLSWithNTRU_HRSS_701, KEMTLSWithNTRU_HRSS_1373,	
-	/* ----------------------------------- End ---------------------------------- */
 }
 
 // helloRetryRequestRandom is set as the Random value of a ServerHello
@@ -596,7 +582,6 @@ const (
 	PQTLSWithDilithium3 SignatureScheme = 0xfe61
 	PQTLSWithDilithium4 SignatureScheme = 0xfe62
 
-	/* -------------------------------- Modified -------------------------------- */
 	// Liboqs Hybrids
 	KEMTLSWithP256_Kyber512 SignatureScheme = 0xfe6b
 	KEMTLSWithP384_Kyber768 SignatureScheme = 0xfe6c
@@ -625,7 +610,7 @@ const (
 	KEMTLSWithNTRU_HRSS_701 SignatureScheme = 0xfe76
 	KEMTLSWithNTRU_HRSS_1373 SignatureScheme = 0xfe77
 
-	// JP: Liboqs Hybrid Signatures
+	// Liboqs Hybrid Signatures
 	PQTLS_P256_Dilithium2 SignatureScheme = 0xfe78
 	PQTLS_P256_Falcon512 SignatureScheme = 0xfe79
 	PQTLS_P256_RainbowIClassic SignatureScheme = 0xfe7a
@@ -637,11 +622,9 @@ const (
 
 	KEMTLSWithP256_Classic_McEliece_348864 SignatureScheme = 0xfe80
 
-	/* ----------------------------------- End ---------------------------------- */
 )
 
 // Liboqs Hybrids
-/* -------------------------------- Modified -------------------------------- */
 
 // Hybrid KEMTLS Authentication
 var liboqsSignatureSchemeMap = map[kem.ID]SignatureScheme{
@@ -701,13 +684,10 @@ func classicFromHybridSig(scheme SignatureScheme) SignatureScheme {
 }
 
 
-/* ----------------------------------- End ---------------------------------- */
 
 func (scheme SignatureScheme) isKEMTLS() bool {
 	switch scheme {
-	/* -------------------------------- Modified -------------------------------- */
 	case KEMTLSWithSIKEp434, KEMTLSWithKyber512, isLiboqsKEMSignature(scheme):
-	/* ----------------------------------- End ---------------------------------- */	
 		return true
 	default:
 		return false

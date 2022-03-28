@@ -9,9 +9,7 @@ import (
 	"crypto"
 	"crypto/hmac"
 	"crypto/kem"
-	/* -------------------------------- Modified -------------------------------- */
 	"crypto/liboqs_sig"
-	/* ----------------------------------- End ---------------------------------- */
 	"crypto/rsa"
 	"crypto/x509"
 	"errors"
@@ -147,7 +145,7 @@ func (hs *clientHandshakeStateTLS13) handshake() error {
 	if err := hs.readServerParameters(); err != nil {
 		return err
 	}
-	if err := hs.readServerCertificate(); err != nil {  // JP | Info: AUTH
+	if err := hs.readServerCertificate(); err != nil {
 		return err
 	}
 	if hs.isKEMTLS {
@@ -156,7 +154,7 @@ func (hs *clientHandshakeStateTLS13) handshake() error {
 	if err := hs.readServerFinished(); err != nil {
 		return err
 	}
-	if err := hs.sendClientCertificate(); err != nil {  // JP | Info: AUTH
+	if err := hs.sendClientCertificate(); err != nil {
 		return err
 	}
 	if err := hs.sendClientFinished(); err != nil {
@@ -514,10 +512,8 @@ func (hs *clientHandshakeStateTLS13) establishHandshakeKeys() error {
 					return err
 				}
 				hs.keyKEMShare = true
-				/* -------------------------------- Modified -------------------------------- */
-				// JP: Secret Print
+				// Secret Print
 				// fmt.Printf("Client KEX\nKEMId: %x\nsharedKey:\n  %x\n\n",kemPrivate.KEMId, sharedKey)
-				/* ----------------------------------- End ---------------------------------- */
 			}
 		}
 	}
@@ -637,9 +633,7 @@ func isKEMTLSAuthUsed(peerCertificate *x509.Certificate, cert Certificate) bool 
 	}
 
 	if kemPriv, ok := peerCertificate.PublicKey.(*kem.PublicKey); ok {
-		/* -------------------------------- Modified -------------------------------- */
 		if kemPriv.KEMId == kem.SIKEp434 || kemPriv.KEMId == kem.Kyber512 || kem.IsLiboqs(kemPriv.KEMId) == kemPriv.KEMId {
-		/* ----------------------------------- End ---------------------------------- */		
 			return true
 		}
 	}
@@ -659,13 +653,11 @@ func isPQTLSAuthUsed(peerCertificate *x509.Certificate, cert Certificate) bool {
 		}
 	}
 
-	/* -------------------------------- Modified -------------------------------- */	
 	if hybridPQCPub, ok := peerCertificate.PublicKey.(*liboqs_sig.PublicKey); ok {
 		if hybridPQCPub.SigId >= liboqs_sig.P256_Dilithium2 && hybridPQCPub.SigId <= liboqs_sig.P521_RainbowVClassic {
 			return true
 		}
 	}	
-	/* ----------------------------------- End ---------------------------------- */
 
 	return false
 }
@@ -732,11 +724,11 @@ func (hs *clientHandshakeStateTLS13) readServerCertificate() error {
 	c.scts = certMsg.certificate.SignedCertificateTimestamps
 	c.ocspResponse = certMsg.certificate.OCSPStaple
 
-	if err := c.verifyServerCertificate(certMsg.certificate.Certificate); err != nil {   // JP | Info: AUTH
+	if err := c.verifyServerCertificate(certMsg.certificate.Certificate); err != nil {
 		return err
 	}
 
-	if isPQTLSAuthUsed(c.peerCertificates[0], certMsg.certificate) {  // JP | Info: AUTH
+	if isPQTLSAuthUsed(c.peerCertificates[0], certMsg.certificate) {
 		if hs.keyKEMShare {
 			c.didPQTLS = true
 		}
@@ -794,7 +786,7 @@ func (hs *clientHandshakeStateTLS13) readServerCertificate() error {
 		}
 
 		signed := signedMessage(sigHash, serverSignatureContext, hs.transcript)
-		if err := verifyHandshakeSignature(sigType, pk,  // JP | Info: AUTH
+		if err := verifyHandshakeSignature(sigType, pk,
 			sigHash, signed, certVerify.signature); err != nil {
 			c.sendAlert(alertDecryptError)
 			return errors.New("tls: invalid signature by the server certificate: " + err.Error())
@@ -1002,7 +994,7 @@ func (hs *clientHandshakeStateTLS13) sendClientCertificate() error {
 		}
 	} else {
 		var err error
-		sig, err = cert.PrivateKey.(crypto.Signer).Sign(c.config.rand(), signed, signOpts)  // JP | Info: AUTH
+		sig, err = cert.PrivateKey.(crypto.Signer).Sign(c.config.rand(), signed, signOpts)
 		if err != nil {
 			c.sendAlert(alertInternalError)
 			return errors.New("tls: failed to sign handshake: " + err.Error())

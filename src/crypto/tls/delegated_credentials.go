@@ -132,9 +132,7 @@ func (cred *credential) marshalPublicKeyInfo() ([]byte, error) {
 		Ed25519, Ed448,
 		KEMTLSWithSIKEp434, KEMTLSWithKyber512,
 		PQTLSWithDilithium3, PQTLSWithDilithium4,
-		/* -------------------------------- Modified -------------------------------- */
 		isLiboqsKEMSignature(cred.expCertVerfAlgo):
-		/* ----------------------------------- End ---------------------------------- */
 		rawPub, err := x509.MarshalPKIXPublicKey(cred.publicKey)
 		if err != nil {
 			return nil, err
@@ -400,13 +398,11 @@ func NewDelegatedCredential(cert *Certificate, pubAlgo SignatureScheme, validTim
 		if err != nil {
 			return nil, nil, err
 		}
-	/* -------------------------------- Modified -------------------------------- */
 	case isLiboqsKEMSignature(pubAlgo):
 		pubK, privK, err = kem.GenerateKey(rand.Reader, liboqsKEMFromSignature(pubAlgo))
 		if err != nil {
 			return nil, nil, err
 		}
-	/* ----------------------------------- End ---------------------------------- */	
 	default:
 		return nil, nil, fmt.Errorf("tls: unsupported algorithm for Delegated Credential: %T", pubAlgo)
 	}

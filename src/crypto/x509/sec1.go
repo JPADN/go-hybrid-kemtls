@@ -35,7 +35,6 @@ func ParseECPrivateKey(der []byte) (*ecdsa.PrivateKey, error) {
 	return parseECPrivateKey(nil, der)
 }
 
-/* -------------------------------- Modified -------------------------------- */
 func ParseECPrivateKeyWithOID(namedCurveOID *asn1.ObjectIdentifier, der []byte) (*ecdsa.PrivateKey, error) {
 	return parseECPrivateKey(namedCurveOID, der)
 }
@@ -43,7 +42,6 @@ func ParseECPrivateKeyWithOID(namedCurveOID *asn1.ObjectIdentifier, der []byte) 
 func OidFromNamedCurve(curve elliptic.Curve) (asn1.ObjectIdentifier, bool) {
 	return oidFromNamedCurve(curve)
 }
-/* ----------------------------------- End ---------------------------------- */
 
 // MarshalECPrivateKey converts an EC private key to SEC 1, ASN.1 DER form.
 //

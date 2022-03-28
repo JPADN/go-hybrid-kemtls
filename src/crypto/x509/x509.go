@@ -40,9 +40,7 @@ import (
 
 	"golang.org/x/crypto/cryptobyte"
 	cryptobyte_asn1 "golang.org/x/crypto/cryptobyte/asn1"
-	/* -------------------------------- Modified -------------------------------- */
 	"crypto/liboqs_sig"
-	/* ----------------------------------- End ---------------------------------- */
 )
 
 // pkixPublicKey reflects a PKIX public key structure. See SubjectPublicKeyInfo
@@ -118,11 +116,9 @@ func marshalPublicKey(pub interface{}) (publicKeyBytes []byte, publicKeyAlgorith
 	case *kem.PublicKey:
 		publicKeyBytes, _ = pub.MarshalBinary()
 		publicKeyAlgorithm.Algorithm = oidPublicKeyKEMTLS
-	/* -------------------------------- Modified -------------------------------- */	
 	case *liboqs_sig.PublicKey:
 		publicKeyBytes = pub.MarshalBinary()				
 		publicKeyAlgorithm.Algorithm = oidPublicKeyPQTLS  
-	/* ----------------------------------- End ---------------------------------- */
 	default:
 		return nil, pkix.AlgorithmIdentifier{}, fmt.Errorf("x509: unsupported public key type: %T", pub)
 	}
@@ -225,7 +221,6 @@ const (
 	PureEd448
 	PureEdDilithium3
 	PureEdDilithium4
-	/* -------------------------------- Modified -------------------------------- */
 	P256Dilithium2
 	P256Falcon512
 	P256RainbowIClassic
@@ -234,7 +229,6 @@ const (
 	P521Dilithium5
 	P521Falcon1024
 	P521RainbowVClassic
-	/* ----------------------------------- End ---------------------------------- */
 )
 
 func (algo SignatureAlgorithm) isRSAPSS() bool {
@@ -267,9 +261,7 @@ const (
 	EdDilithium3
 	EdDilithium4
 	KEMTLS
-	/* -------------------------------- Modified -------------------------------- */
 	PQTLS
-	/* ----------------------------------- End ---------------------------------- */
 )
 
 var publicKeyAlgoName = [...]string{
@@ -281,9 +273,7 @@ var publicKeyAlgoName = [...]string{
 	EdDilithium3: "Ed25519-Dilithium3",
 	EdDilithium4: "Ed448-Dilithium4",
 	KEMTLS:       "KEMTLS",
-	/* -------------------------------- Modified -------------------------------- */
 	PQTLS:        "PQTLS",
-	/* ----------------------------------- End ---------------------------------- */
 }
 
 func (algo PublicKeyAlgorithm) String() string {
@@ -375,7 +365,6 @@ var (
 	// to produce certificates with this OID.
 	oidISOSignatureSHA1WithRSA = asn1.ObjectIdentifier{1, 3, 14, 3, 2, 29}
 
-	/* -------------------------------- Modified -------------------------------- */
 	oidSignatureP256Dilithium2 = asn1.ObjectIdentifier{1, 3, 6, 1, 4, 1, 44363, 45, 12}
 	oidSignatureP256Falcon512 = asn1.ObjectIdentifier{1, 3, 6, 1, 4, 1, 44363, 45, 13}
 	oidSignatureP256RainbowIClassic = asn1.ObjectIdentifier{1, 3, 6, 1, 4, 1, 44363, 45, 14}
@@ -384,16 +373,13 @@ var (
 	oidSignatureP521Dilithium5 = asn1.ObjectIdentifier{1, 3, 6, 1, 4, 1, 44363, 45, 17}
 	oidSignatureP521Falcon1024 = asn1.ObjectIdentifier{1, 3, 6, 1, 4, 1, 44363, 45, 18}
 	oidSignatureP521RainbowVClassic = asn1.ObjectIdentifier{1, 3, 6, 1, 4, 1, 44363, 45, 19}
-	/* ----------------------------------- End ---------------------------------- */
 )
 
-/* -------------------------------- Modified -------------------------------- */
 var oidSignatureFromSigID = map[liboqs_sig.ID]asn1.ObjectIdentifier {
 	liboqs_sig.P256_Dilithium2: oidSignatureP256Dilithium2, liboqs_sig.P256_Falcon512: oidSignatureP256Falcon512, liboqs_sig.P256_RainbowIClassic: oidSignatureP256RainbowIClassic, 
 	liboqs_sig.P384_Dilithium3: oidSignatureP384Dilithium3, liboqs_sig.P384_RainbowIIIClassic: oidSignatureP384RainbowIIIClassic, 
 	liboqs_sig.P521_Dilithium5: oidSignatureP521Dilithium5, liboqs_sig.P521_Falcon1024: oidSignatureP521Falcon1024, liboqs_sig.P521_RainbowVClassic: oidSignatureP521RainbowVClassic,
 }
-/* ----------------------------------- End ---------------------------------- */
 
 var signatureAlgorithmDetails = []struct {
 	algo       SignatureAlgorithm
@@ -419,7 +405,6 @@ var signatureAlgorithmDetails = []struct {
 	{ECDSAWithSHA384, "ECDSA-SHA384", oidSignatureECDSAWithSHA384, ECDSA, crypto.SHA384},
 	{ECDSAWithSHA512, "ECDSA-SHA512", oidSignatureECDSAWithSHA512, ECDSA, crypto.SHA512},
 	{PureEd25519, "Ed25519", oidSignatureEd25519, Ed25519, crypto.Hash(0) /* no pre-hashing */},
-	/* -------------------------------- Modified -------------------------------- */
 	{P256Dilithium2, "P256Dilithium2", oidSignatureP256Dilithium2, PQTLS, crypto.SHA256},
 	{P256Falcon512, "P256Falcon512", oidSignatureP256Falcon512, PQTLS, crypto.SHA256},
 	{P256RainbowIClassic, "P256RainbowIClassic", oidSignatureP256RainbowIClassic, PQTLS, crypto.SHA256},
@@ -428,7 +413,6 @@ var signatureAlgorithmDetails = []struct {
 	{P521Dilithium5, "P521Dilithium5", oidSignatureP521Dilithium5, PQTLS, crypto.SHA512},
 	{P521Falcon1024, "P521Falcon1024", oidSignatureP521Falcon1024, PQTLS, crypto.SHA512},
 	{P521RainbowVClassic, "P521RainbowVClassic", oidSignatureP521RainbowVClassic, PQTLS, crypto.SHA512},
-	/* ----------------------------------- End ---------------------------------- */
 }
 
 // hashToPSSParameters contains the DER encoded RSA PSS parameters for the
@@ -535,9 +519,7 @@ var (
 	oidPublicKeyEdDilithium3 = asn1.ObjectIdentifier{1, 3, 6, 1, 4, 1, 44363, 45, 9}  // Cloudflare OID
 	oidPublicKeyEdDilithium4 = asn1.ObjectIdentifier{1, 3, 6, 1, 4, 1, 44363, 45, 10} // Cloudflare OID
 	oidPublicKeyKEMTLS       = asn1.ObjectIdentifier{1, 3, 6, 1, 4, 1, 44363, 45, 11} // Cloudflare OID
-	/* -------------------------------- Modified -------------------------------- */
 	oidPublicKeyPQTLS       = asn1.ObjectIdentifier{1, 3, 6, 1, 4, 1, 44363, 45, 12}
-	/* ----------------------------------- End ---------------------------------- */
 	
 )
 
@@ -559,10 +541,8 @@ func getPublicKeyAlgorithmFromOID(oid asn1.ObjectIdentifier) PublicKeyAlgorithm 
 		return EdDilithium4
 	case oid.Equal(oidPublicKeyKEMTLS):
 		return KEMTLS
-	/* -------------------------------- Modified -------------------------------- */
 	case oid.Equal(oidPublicKeyPQTLS):
 		return PQTLS
-	/* ----------------------------------- End ---------------------------------- */	
 	default:
 		scheme := circlPki.SchemeByOid(oid)
 		if scheme == nil {
@@ -982,7 +962,6 @@ func checkSignature(algo SignatureAlgorithm, signed, signature []byte, publicKey
 			return fmt.Errorf("x509: %s verification failed", scheme.Name())
 		}
 		return
-	/* -------------------------------- Modified -------------------------------- */
 	case liboqs_sig.PublicKey:
 		if pubKeyAlgo != PQTLS {
 			return signaturePublicKeyAlgoMismatchError(pubKeyAlgo, pub)
@@ -1006,7 +985,6 @@ func checkSignature(algo SignatureAlgorithm, signed, signature []byte, publicKey
 		}
 
 		return
-	/* ----------------------------------- End ---------------------------------- */
 	}
 	return ErrUnsupportedAlgorithm
 }
@@ -1163,7 +1141,6 @@ func parsePublicKey(algo PublicKeyAlgorithm, keyData *publicKeyInfo) (interface{
 			return nil, errors.New("x509: wrong KEM identifier")
 		}
 		return pub, nil
-	/* -------------------------------- Modified -------------------------------- */
 	case PQTLS:
 		pub := new(liboqs_sig.PublicKey)
 		err := pub.UnmarshalBinary(keyData.PublicKey.Bytes)
@@ -1171,7 +1148,6 @@ func parsePublicKey(algo PublicKeyAlgorithm, keyData *publicKeyInfo) (interface{
 			return nil, errors.New("x509: wrong KEM identifier")
 		}
 		return pub, nil
-	/* ----------------------------------- End ---------------------------------- */
 	default:
 		if scheme := CirclSchemeByPublicKeyAlgorithm(algo); scheme != nil {
 			if len(keyData.Algorithm.Parameters.FullBytes) != 0 {
@@ -2250,9 +2226,7 @@ func signingParamsForPublicKey(pub interface{}, requestedSigAlgo SignatureAlgori
 			err = errors.New("x509: particular circl scheme not supported")
 			return
 		}
-		sigAlgo.Algorithm = certScheme.Oid()
-	/* -------------------------------- Modified -------------------------------- */
-	// JP - TODO: Should this be a pointer?
+		sigAlgo.Algorithm = certScheme.Oid()	
 	case liboqs_sig.PublicKey:
 		pubType = PQTLS
 		sigAlgo.Algorithm = oidSignatureFromSigID[pub.SigId]
@@ -2260,7 +2234,6 @@ func signingParamsForPublicKey(pub interface{}, requestedSigAlgo SignatureAlgori
 		if err != nil {
 			return
 		}
-	/* ----------------------------------- End ---------------------------------- */
 	default:
 		err = errors.New("x509: only RSA, ECDSA, Ed25519 and circl keys supported")
 	}

@@ -282,7 +282,6 @@ func (hs *serverHandshakeStateTLS13) processClientHello() error {
 						}
 					}
 				}			
-			/* -------------------------------- Modified -------------------------------- */			
 			} else {								
 				
 				certMsg := new(certificateMsgTLS13)
@@ -313,7 +312,6 @@ func (hs *serverHandshakeStateTLS13) processClientHello() error {
 					hs.hello.pdkKEMTLS = true
 				}				
 			}
-			/* ----------------------------------- End ---------------------------------- */
 		} else {
 			certMsg := new(certificateMsgTLS13)
 
@@ -482,10 +480,8 @@ GroupSelection:
 		hs.hello.serverShare = keyShare{group: selectedGroup, data: ciphertext}
 		hs.sharedKey = sharedKey
 		hs.keyKEMShare = true
-		/* -------------------------------- Modified -------------------------------- */
-		// JP: Secret Print
+		// Secret Print
 		// fmt.Printf("Server KEX\nKEMId: %x\nsharedKey:\n  %x\n\n", kem.ID(selectedGroup), sharedKey)
-		/* ----------------------------------- End ---------------------------------- */
 	} else {
 		if _, ok := curveForCurveID(selectedGroup); (selectedGroup != X25519 && !selectedGroup.isKEM()) && !ok {
 			c.sendAlert(alertInternalError)
@@ -1053,7 +1049,7 @@ func (hs *serverHandshakeStateTLS13) sendServerCertificate() error {
 		certVerifyMsg.hasSignatureAlgorithm = true
 		certVerifyMsg.signatureAlgorithm = hs.sigAlg
 
-		sigType, sigHash, err := typeAndHashFromSignatureScheme(certVerifyMsg.signatureAlgorithm)  // JP | Info: AUTH
+		sigType, sigHash, err := typeAndHashFromSignatureScheme(certVerifyMsg.signatureAlgorithm)
 		if err != nil {
 			return c.sendAlert(alertInternalError)
 		}
@@ -1080,7 +1076,7 @@ func (hs *serverHandshakeStateTLS13) sendServerCertificate() error {
 			}
 		} else {
 			var err error
-			sig, err = hs.cert.PrivateKey.(crypto.Signer).Sign(c.config.rand(), signed, signOpts)  // JP | Info: AUTH
+			sig, err = hs.cert.PrivateKey.(crypto.Signer).Sign(c.config.rand(), signed, signOpts)
 			if err != nil {
 				public := hs.cert.PrivateKey.(crypto.Signer).Public()
 				if rsaKey, ok := public.(*rsa.PublicKey); ok && sigType == signatureRSAPSS &&
