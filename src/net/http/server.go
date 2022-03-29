@@ -3174,16 +3174,6 @@ func ListenAndServeTLS(addr, certFile, keyFile string, handler Handler) error {
 	return server.ListenAndServeTLS(certFile, keyFile)
 }
 
-
-func ListenAndServeTLSWithConfig(addr, certFile, keyFile string, serverConfig *tls.Config, handler Handler) error {
-	server := &Server{
-		Addr: addr, 
-		Handler: handler,
-		TLSConfig: serverConfig,
-	}
-	return server.ListenAndServeTLS(certFile, keyFile)
-}
-
 // ListenAndServeTLS listens on the TCP network address srv.Addr and
 // then calls ServeTLS to handle requests on incoming TLS connections.
 // Accepted connections are configured to enable TCP keep-alives.
