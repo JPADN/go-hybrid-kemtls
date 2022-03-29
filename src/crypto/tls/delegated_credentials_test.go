@@ -775,7 +775,7 @@ func TestDCKEMHandshakeServerAuth(t *testing.T) {
 	clientMsg := "hello, server"
 
 	clientConfig := dcTestConfig.Clone()
-	serverConfig := dcTestConfig.Clone()	
+	serverConfig := dcTestConfig.Clone()
 	clientConfig.KEMTLSEnabled = true
 	serverConfig.KEMTLSEnabled = true
 	clientConfig.CurvePreferences = []CurveID{Kyber512, SIKEp434}

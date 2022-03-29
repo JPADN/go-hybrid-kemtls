@@ -31,7 +31,7 @@ type serverHandshakeStateTLS13 struct {
 	usingPSK     bool
 	
 	usingCachedInformation bool  // RFC 7924: Cached Information Extension
-	certHash []byte 						 // RFC 7924: Cached Information Extension
+	certHash []byte              // RFC 7924: Cached Information Extension
 
 	keyKEMShare        bool
 	isKEMTLS           bool

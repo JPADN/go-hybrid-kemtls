@@ -244,12 +244,7 @@ var rsaSignatureSchemes = []struct {
 //
 // This function must be kept in sync with supportedSignatureAlgorithms.
 func signatureSchemesForCertificate(version uint16, cert *Certificate) []SignatureScheme {
-	
-	// priv, ok := cert.PrivateKey.(crypto.Signer)
-	// if !ok {
-	// 	return nil
-	// }
-	
+		
 	var sigAlgs []SignatureScheme
 
 	_, ok := cert.PrivateKey.(*kem.PrivateKey)
