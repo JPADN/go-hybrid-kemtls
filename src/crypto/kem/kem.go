@@ -11,6 +11,7 @@ import (
 	"golang.org/x/crypto/curve25519"
 
 	"github.com/open-quantum-safe/liboqs-go/oqs"
+)
 
 // ID identifies each type of KEM.
 type ID uint16
