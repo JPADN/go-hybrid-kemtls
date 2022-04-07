@@ -664,6 +664,7 @@ func isPQTLSAuthUsed(peerCertificate *x509.Certificate, cert Certificate) bool {
 
 func (hs *clientHandshakeStateTLS13) readServerCertificate() error {
 	c := hs.c
+	var certMsg *certificateMsgTLS13
 
 	if hs.pdkKEMTLS && hs.keyKEMShare {
 		hs.isKEMTLS = true
@@ -702,22 +703,41 @@ func (hs *clientHandshakeStateTLS13) readServerCertificate() error {
 		}
 	}
 
-	cachedCertMsg, ok := msg.(*certificateMsgTLS13CachedInfo)
-	if ok {
-		hs.transcript.Write(cachedCertMsg.marshal())				
-		return nil
-	}
+	if hs.serverHello.cachedInformationCert {
+		cachedCertMsg, ok := msg.(*certificateMsgTLS13CachedInfo)
+		if !ok {
+			c.sendAlert(alertUnexpectedMessage)
+			return unexpectedMessageError(cachedCertMsg, msg)
+		}
+		
+		hs.transcript.Write(cachedCertMsg.marshal())
 
-	certMsg, ok := msg.(*certificateMsgTLS13)
-	if !ok {
-		c.sendAlert(alertUnexpectedMessage)
-		return unexpectedMessageError(certMsg, msg)
+		certMsg = new(certificateMsgTLS13)
+		
+		data := append([]byte(nil), hs.c.config.CachedCert...)
+
+		if !certMsg.unmarshal(data) {
+			return errors.New("tls: wrong cached certificates message")
+		}
+
+		if len(certMsg.certificate.Certificate) == 0 {
+			c.sendAlert(alertDecodeError)
+			return errors.New("tls: wrong cached certificates message")
+		}			
+
+	} else {
+
+		certMsg, ok = msg.(*certificateMsgTLS13)
+		if !ok {
+			c.sendAlert(alertUnexpectedMessage)
+			return unexpectedMessageError(certMsg, msg)
+		}
+		if len(certMsg.certificate.Certificate) == 0 {
+			c.sendAlert(alertDecodeError)
+			return errors.New("tls: received empty certificates message")
+		}
+		hs.transcript.Write(certMsg.marshal())
 	}
-	if len(certMsg.certificate.Certificate) == 0 {
-		c.sendAlert(alertDecodeError)
-		return errors.New("tls: received empty certificates message")
-	}
-	hs.transcript.Write(certMsg.marshal())
 
 	hs.handshakeTimings.ReadCertificate = hs.handshakeTimings.elapsedTime()
 

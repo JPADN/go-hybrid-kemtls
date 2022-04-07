@@ -1033,16 +1033,16 @@ func (hs *serverHandshakeStateTLS13) sendServerCertificate() error {
 		}		
 	
 		hs.handshakeTimings.WriteCertificate = hs.handshakeTimings.elapsedTime()
+	} else {
 
-		return nil
+		hs.transcript.Write(certMsg.marshal())
+		if _, err := c.writeRecord(recordTypeHandshake, certMsg.marshal()); err != nil {
+			return err
+		}
+
+		hs.handshakeTimings.WriteCertificate = hs.handshakeTimings.elapsedTime()
 	}
 
-	hs.transcript.Write(certMsg.marshal())
-	if _, err := c.writeRecord(recordTypeHandshake, certMsg.marshal()); err != nil {
-		return err
-	}
-
-	hs.handshakeTimings.WriteCertificate = hs.handshakeTimings.elapsedTime()
 
 	if !hs.isKEMTLS {
 		certVerifyMsg := new(certificateVerifyMsg)

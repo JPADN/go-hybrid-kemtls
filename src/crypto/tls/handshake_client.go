@@ -184,13 +184,15 @@ func (c *Conn) makeClientHello(minVersion uint16) (*clientHelloMsg, []clientKeyS
 			c.scts = certMsg.certificate.SignedCertificateTimestamps
 			c.ocspResponse = certMsg.certificate.OCSPStaple
 
-			if err := c.verifyServerCertificate(certMsg.certificate.Certificate); err != nil {
-				return nil, nil, nil, err
-			}
+			// The following check will be performed in (hs *clientHandshakeStateTLS13) readServerCertificate()
 
-			if isPQTLSAuthUsed(c.peerCertificates[0], certMsg.certificate) {
-				c.didPQTLS = true				
-			}
+			// if err := c.verifyServerCertificate(certMsg.certificate.Certificate); err != nil {
+			// 	return nil, nil, nil, err
+			// }
+
+			// if !isPQTLSAuthUsed(c.peerCertificates[0], certMsg.certificate) {
+			// 	return nil, nil, nil, errors.New("tls: unexpected algorithm")
+			// }
 		}
 	}
 
