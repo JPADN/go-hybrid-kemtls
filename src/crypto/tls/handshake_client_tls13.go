@@ -112,8 +112,17 @@ func (hs *clientHandshakeStateTLS13) handshake() error {
 		return err
 	}
 
+	marshalledHello := hs.hello.marshal()
+
+	clientHelloSize, err := getMessageLength(marshalledHello)
+	if err != nil {
+		return err
+	}
+
+	hs.c.clientHandshakeSizes.ClientHello = clientHelloSize
+
 	hs.transcript = hs.suite.hash.New()
-	hs.transcript.Write(hs.hello.marshal())
+	hs.transcript.Write(marshalledHello)
 
 	// When offering ECH, it is not known whether ECH was accepted until the
 	// ServerHello is processed. In particular, we do not know at this point if
@@ -953,13 +962,23 @@ func (hs *clientHandshakeStateTLS13) sendClientCertificate() error {
 	certMsg.ocspStapling = hs.certReq.ocspStapling && len(cert.OCSPStaple) > 0
 	certMsg.delegatedCredential = hs.certReq.supportDelegatedCredential && len(cert.DelegatedCredential) > 0
 
-	hs.transcript.Write(certMsg.marshal())
-	if _, err := c.writeRecord(recordTypeHandshake, certMsg.marshal()); err != nil {
+	marshalledCertificate := certMsg.marshal()
+
+	hs.transcript.Write(marshalledCertificate)
+	if _, err := c.writeRecord(recordTypeHandshake, marshalledCertificate); err != nil {
 		return err
 	}
 
 	hs.handshakeTimings.WriteCertificate = hs.handshakeTimings.elapsedTime()
 
+	certificateSize, err := getMessageLength(marshalledCertificate)
+	if err != nil {
+		return err
+	}
+
+	hs.c.clientHandshakeSizes.Certificate = certificateSize
+
+	
 	// If we sent an empty certificate message, skip the CertificateVerify.
 	if len(cert.Certificate) == 0 {
 		return nil
@@ -1023,13 +1042,22 @@ func (hs *clientHandshakeStateTLS13) sendClientCertificate() error {
 
 	certVerifyMsg.signature = sig
 
-	hs.transcript.Write(certVerifyMsg.marshal())
-	if _, err := c.writeRecord(recordTypeHandshake, certVerifyMsg.marshal()); err != nil {
+	marshalledCertVerify := certVerifyMsg.marshal()
+
+	hs.transcript.Write(marshalledCertVerify)
+	if _, err := c.writeRecord(recordTypeHandshake, marshalledCertVerify); err != nil {
 		return err
 	}
 
 	c.didClientAuthentication = true
 	hs.handshakeTimings.WriteCertificateVerify = hs.handshakeTimings.elapsedTime()
+
+	certVerifySize, err := getMessageLength(marshalledCertVerify)
+	if err != nil {
+		return err
+	}
+
+	hs.c.clientHandshakeSizes.CertificateVerify = certVerifySize
 
 	c.certificateReqMessage = hs.certReq.marshal()
 

@@ -27,6 +27,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"golang.org/x/crypto/cryptobyte"
 )
 
 const (
@@ -455,6 +456,9 @@ type ConnectionState struct {
 
 	// ekm is a closure exposed via ExportKeyingMaterial.
 	ekm func(label string, context []byte, length int) ([]byte, error)
+
+	ClientHandshakeSizes TLS13ClientHandshakeSizes
+	ServerHandshakeSizes TLS13ServerHandshakeSizes
 }
 
 // ExportKeyingMaterial returns length bytes of exported key material in a new
@@ -2012,4 +2016,16 @@ func deprioritizeAES(ciphers []uint16) []uint16 {
 		return nonAESGCMAEADCiphers[reordered[i]] && aesgcmCiphers[reordered[j]]
 	})
 	return reordered
+}
+
+// getMessageLength returns the handshake message length
+func getMessageLength(msg []byte) (uint32, error) {
+	var msg_size uint32
+	
+	s := cryptobyte.String(msg)
+	if !s.Skip(1) || !s.ReadUint24(&msg_size) {
+		return 0, errors.New("tls: couldn't get length of client hello message")
+	}
+
+	return msg_size, nil
 }

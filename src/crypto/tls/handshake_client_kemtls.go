@@ -112,16 +112,25 @@ func (hs *clientHandshakeStateTLS13) sendClientKEMCiphertext() error {
 			ciphertext: ct,
 		}
 
-		_, err = c.writeRecord(recordTypeHandshake, msg.marshal())
+		marshalledcKEMCt := msg.marshal()		
+
+		_, err = c.writeRecord(recordTypeHandshake, marshalledcKEMCt)
 		if err != nil {
 			return err
 		}
 
-		_, err = hs.transcript.Write(msg.marshal())
+		_, err = hs.transcript.Write(marshalledcKEMCt)
 		if err != nil {
 			return err
 		}
 		hs.handshakeTimings.WriteKEMCiphertext = hs.handshakeTimings.elapsedTime()
+
+		clientKEMCtSize, err := getMessageLength(marshalledcKEMCt)
+		if err != nil {
+			return err
+		}
+
+		hs.c.clientHandshakeSizes.ClientKEMCiphertext = clientKEMCtSize
 
 		// AHS <- HKDF.Extract(dHS, ss_s)
 		ahs = hs.suite.extract(ss, hs.suite.deriveSecret(hs.handshakeSecret, "derived", nil))
@@ -209,12 +218,22 @@ func (hs *clientHandshakeStateTLS13) sendKEMClientCertificate() error {
 	certMsg.ocspStapling = hs.certReq.ocspStapling && len(cert.OCSPStaple) > 0
 	certMsg.delegatedCredential = hs.certReq.supportDelegatedCredential && len(cert.DelegatedCredential) > 0
 
-	hs.transcript.Write(certMsg.marshal())
-	if _, err := c.writeRecord(recordTypeHandshake, certMsg.marshal()); err != nil {
+	marshalledCertificate := certMsg.marshal()
+	
+	hs.transcript.Write(marshalledCertificate)
+	if _, err := c.writeRecord(recordTypeHandshake, marshalledCertificate); err != nil {
 		return err
 	}
 
 	hs.handshakeTimings.WriteCertificate = hs.handshakeTimings.elapsedTime()
+
+	certificateSize, err := getMessageLength(marshalledCertificate)
+	if err != nil {
+		return err
+	}
+
+	hs.c.clientHandshakeSizes.Certificate = certificateSize
+
 
 	return nil
 }

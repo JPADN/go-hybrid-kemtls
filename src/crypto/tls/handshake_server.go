@@ -53,6 +53,9 @@ func (c *Conn) serverHandshake() error {
 			clientHello:      clientHello,
 			handshakeTimings: createTLS13ServerHandshakeTimingInfo(c.config.Time),
 		}
+
+		c.serverHandshakeSizes = TLS13ServerHandshakeSizes{}
+		
 		return hs.handshake()
 	}
 

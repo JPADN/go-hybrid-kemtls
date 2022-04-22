@@ -329,6 +329,7 @@ func (c *Conn) clientHandshake() (err error) {
 	}
 
 	handshakeTimings := createTLS13ClientHandshakeTimingInfo(c.config.Time)
+	c.clientHandshakeSizes = TLS13ClientHandshakeSizes{}
 
 	// This may be a renegotiation handshake, in which case some fields
 	// need to be reset.

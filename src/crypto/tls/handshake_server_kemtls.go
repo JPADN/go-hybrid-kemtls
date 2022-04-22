@@ -240,14 +240,24 @@ func (hs *serverHandshakeStateTLS13) sendServerKEMCiphertext() error {
 		key: ct,
 	}
 
-	_, err = c.writeRecord(recordTypeHandshake, msg.marshal())
+	marshalledServerKEMCT := msg.marshal()
+
+	_, err = c.writeRecord(recordTypeHandshake, marshalledServerKEMCT)
 	if err != nil {
 		return err
 	}
-	_, err = hs.transcript.Write(msg.marshal())
+	_, err = hs.transcript.Write(marshalledServerKEMCT)
 	if err != nil {
 		return err
 	}
+
+	serverKEMCTSize, err := getMessageLength(marshalledServerKEMCT)
+	if err != nil {
+		return err
+	}
+
+	hs.c.serverHandshakeSizes.ServerKEMCiphertext = serverKEMCTSize
+
 	hs.handshakeTimings.WriteKEMCiphertext = hs.handshakeTimings.elapsedTime()
 
 	// MS <- HKDF.Extract(dAHS, ssC)
