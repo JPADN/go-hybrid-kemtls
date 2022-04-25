@@ -127,6 +127,7 @@ type TLS13ClientHandshakeSizes struct {
 	// KEMTLS/PQTLS Mutual
 	ClientHello uint32	
 	Certificate uint32
+	Finished uint32
 	
 	// PQTLS exclusive
 	CertificateVerify uint32
@@ -198,7 +199,10 @@ type CFEventTLS13ServerHandshakeTimingInfo struct {
 type TLS13ServerHandshakeSizes struct {
 	// KEMTLS/PQTLS Mutual
 	ServerHello uint32
+	EncryptedExtensions uint32
 	Certificate uint32
+	CertificateRequest uint32
+	Finished uint32
 	
 	// KEMTLS exclusive
 	ServerKEMCiphertext uint32

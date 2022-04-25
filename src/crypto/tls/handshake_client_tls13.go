@@ -1075,12 +1075,21 @@ func (hs *clientHandshakeStateTLS13) sendClientFinished() error {
 		verifyData: hs.suite.finishedHash(c.out.trafficSecret, hs.transcript),
 	}
 
-	hs.transcript.Write(finished.marshal())
-	if _, err := c.writeRecord(recordTypeHandshake, finished.marshal()); err != nil {
+	marshalledFinished := finished.marshal()
+
+	hs.transcript.Write(marshalledFinished)
+	if _, err := c.writeRecord(recordTypeHandshake, marshalledFinished); err != nil {
 		return err
 	}
 
 	hs.handshakeTimings.WriteClientFinished = hs.handshakeTimings.elapsedTime()
+
+	finishedSize, err := getMessageLength(marshalledFinished)
+	if err != nil {
+		return err
+	}
+
+	hs.c.clientHandshakeSizes.Finished = finishedSize
 
 	c.out.setTrafficSecret(hs.suite, hs.trafficSecret)
 

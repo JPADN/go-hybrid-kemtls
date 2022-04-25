@@ -303,14 +303,23 @@ func (hs *clientHandshakeStateTLS13) sendKEMTLSClientFinished() error {
 		verifyData: hs.suite.finishedHashKEMTLS(hs.masterSecret, "c", hs.transcript),
 	}
 
-	if _, err := hs.transcript.Write(finished.marshal()); err != nil {
+	marshalledFinished := finished.marshal()
+
+	if _, err := hs.transcript.Write(marshalledFinished); err != nil {
 		return err
 	}
-	if _, err := c.writeRecord(recordTypeHandshake, finished.marshal()); err != nil {
+	if _, err := c.writeRecord(recordTypeHandshake, marshalledFinished); err != nil {
 		return err
 	}
 
 	hs.handshakeTimings.WriteClientFinished = hs.handshakeTimings.elapsedTime()
+
+	finishedSize, err1 := getMessageLength(marshalledFinished)
+	if err1 != nil {
+		return err1
+	}
+
+	hs.c.clientHandshakeSizes.Finished = finishedSize
 
 	// CATS <- HKDF.Expand(MS, "c ap traffic", CH..CF)
 	hs.trafficSecret = hs.suite.deriveSecret(hs.masterSecret,

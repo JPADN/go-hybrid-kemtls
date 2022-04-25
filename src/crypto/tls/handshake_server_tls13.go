@@ -976,12 +976,21 @@ func (hs *serverHandshakeStateTLS13) sendServerParameters() error {
 		encryptedExtensions.ech = c.ech.retryConfigs
 	}
 
-	hs.transcript.Write(encryptedExtensions.marshal())
-	if _, err := c.writeRecord(recordTypeHandshake, encryptedExtensions.marshal()); err != nil {
+	marshalledEE := encryptedExtensions.marshal()
+
+	hs.transcript.Write(marshalledEE)
+	if _, err := c.writeRecord(recordTypeHandshake, marshalledEE); err != nil {
 		return err
 	}
 
 	hs.handshakeTimings.WriteEncryptedExtensions = hs.handshakeTimings.elapsedTime()
+
+	eeSize, err := getMessageLength(marshalledEE)
+	if err != nil {
+		return err
+	}
+
+	hs.c.serverHandshakeSizes.EncryptedExtensions = eeSize
 
 	return nil
 }
@@ -1016,12 +1025,21 @@ func (hs *serverHandshakeStateTLS13) sendServerCertificate() error {
 		}
 
 		hs.certReq = certReq
-		hs.transcript.Write(certReq.marshal())
-		if _, err := c.writeRecord(recordTypeHandshake, certReq.marshal()); err != nil {
+
+		marshalledCertReq := certReq.marshal()
+		hs.transcript.Write(marshalledCertReq)
+		if _, err := c.writeRecord(recordTypeHandshake, marshalledCertReq); err != nil {
 			return err
 		}
 
-		c.certificateReqMessage = certReq.marshal()
+		c.certificateReqMessage = marshalledCertReq
+
+		certReqSize, err := getMessageLength(marshalledCertReq)
+		if err != nil {
+			return err
+		}
+	
+		hs.c.serverHandshakeSizes.CertificateRequest = certReqSize
 	}
 
 	certMsg := new(certificateMsgTLS13)
@@ -1150,12 +1168,21 @@ func (hs *serverHandshakeStateTLS13) sendServerFinished() error {
 		verifyData: hs.suite.finishedHash(c.out.trafficSecret, hs.transcript),
 	}
 
-	hs.transcript.Write(finished.marshal())
-	if _, err := c.writeRecord(recordTypeHandshake, finished.marshal()); err != nil {
+	marshalledFinished := finished.marshal()
+
+	hs.transcript.Write(marshalledFinished)
+	if _, err := c.writeRecord(recordTypeHandshake, marshalledFinished); err != nil {
 		return err
 	}
 
 	hs.handshakeTimings.WriteServerFinished = hs.handshakeTimings.elapsedTime()
+
+	finishedSize, err1 := getMessageLength(marshalledFinished)
+	if err1 != nil {
+		return err1
+	}
+
+	hs.c.serverHandshakeSizes.Finished = finishedSize
 
 	// Derive secrets that take context through the server Finished.
 
