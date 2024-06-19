@@ -16,6 +16,25 @@ func isPQCLiboqs(kemID ID) bool {
 	return false
 }
 
+func (sch *liboqsHybridScheme) details(kemId ID) KEMDetails {
+	sch.pqc.Init(sch.pqcName, nil)
+	
+	classicScheme := sch.classic
+	pqcDetails := sch.pqc.Details()
+
+	hybridPubSize := classicScheme.PublicKeySize() + pqcDetails.LengthPublicKey
+	hybridCtSize := classicScheme.CiphertextSize() + pqcDetails.LengthCiphertext
+	nistLevel := pqcDetails.ClaimedNISTLevel
+
+	details := KEMDetails{
+		ClaimedNISTLevel: nistLevel,
+		PublicKeySize: hybridPubSize,
+		CiphertextSize: hybridCtSize,
+	}
+
+	return details
+}
+
 func (sch *liboqsHybridScheme) Keygen() ([]byte, []byte, error) {
 
 	// Classic
@@ -118,4 +137,13 @@ func GetLiboqsKEMName(kemId ID) (string, error) {
 		return "", errors.New("Liboqs KEM algorithm not found")
 	}
 	return name, nil
+}
+
+func GetLiboqsKEMIDFromName(name string) (ID, error) {
+	for kemId, kemName := range liboqsKEMNames {
+		if kemName == name {
+			return kemId, nil
+		}		
+	}
+	return 0, errors.New("Liboqs KEM algorithm not found")	
 }

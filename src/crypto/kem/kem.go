@@ -2,6 +2,7 @@ package kem
 
 import (
 	"circl/dh/sidh"
+	"circl/hpke"
 	"circl/kem/schemes"
 	"errors"
 	"fmt"
@@ -23,6 +24,7 @@ const (
 	Kyber512 ID = 0x01fc
 	// SIKEp434 is a post-quantum KEM, as defined in: https://sike.org/ .
 	SIKEp434 ID = 0x01fd
+
 	// Liboqs Hybrids
 	P256_Kyber512  ID = 0x0204
 	P384_Kyber768  ID = 0x0205
@@ -70,6 +72,11 @@ const (
 
 	NTRU_HRSS_701  ID = 0x0223
 	NTRU_HRSS_1373 ID = 0x0224
+
+	// Classic KEMs
+	KEM_P256 ID = 0x0225
+	KEM_P384 ID = 0x0226
+	KEM_P521 ID = 0x0227
 )
 
 // PrivateKey is a KEM private key.
@@ -82,6 +89,19 @@ type PrivateKey struct {
 type PublicKey struct {
 	KEMId     ID
 	PublicKey []byte
+}
+
+type KEMDetails struct {
+	ClaimedNISTLevel int
+	PublicKeySize int
+	CiphertextSize int
+}
+
+func isClassicKEM(kemID ID) ID {
+	if kemID >= KEM_P256 && kemID <= KEM_P521 {
+		return kemID
+	}
+	return 0
 }
 
 // MarshalBinary returns the byte representation of a KEM public key.
@@ -164,7 +184,7 @@ func GenerateKey(rand io.Reader, kemID ID) (*PublicKey, *PrivateKey, error) {
 			}
 			privBytes = oqsKEM.ExportSecretKey()
 		} else {
-			scheme := liboqsSchemeMap[kemID]
+			scheme := liboqsHybridSchemesMap[kemID]
 
 			pubBytes, privBytes, err = scheme.Keygen()
 			if err != nil {
@@ -172,7 +192,25 @@ func GenerateKey(rand io.Reader, kemID ID) (*PublicKey, *PrivateKey, error) {
 			}
 		}
 		return &PublicKey{KEMId: kemID, PublicKey: pubBytes}, &PrivateKey{KEMId: kemID, PrivateKey: privBytes}, nil
+	case isClassicKEM(kemID):
 
+		scheme := classicKEMSchemeMap[kemID].Scheme()			
+		kemPk1, kemSk1, err := scheme.GenerateKeyPair()
+		if err != nil {
+			return nil, nil, err
+		}
+
+		pubBytes, err := kemPk1.MarshalBinary()
+		if err != nil {
+			return nil, nil, err
+		}
+	
+		privBytes, err := kemSk1.MarshalBinary()
+		if err != nil {
+			return nil, nil, err
+		}
+		return &PublicKey{KEMId: kemID, PublicKey: pubBytes}, &PrivateKey{KEMId: kemID, PrivateKey: privBytes}, nil
+	
 	default:
 		return nil, nil, fmt.Errorf("crypto/kem: internal error: unsupported KEM %d", kemID)
 	}
@@ -245,7 +283,7 @@ func Encapsulate(rand io.Reader, pk *PublicKey) (sharedSecret []byte, ciphertext
 			}
 
 		} else {
-			scheme := liboqsSchemeMap[pk.KEMId]
+			scheme := liboqsHybridSchemesMap[pk.KEMId]
 
 			ct, ss, err = scheme.Encapsulate(pk)
 			if err != nil {
@@ -254,6 +292,20 @@ func Encapsulate(rand io.Reader, pk *PublicKey) (sharedSecret []byte, ciphertext
 		}
 
 		return ss, ct, nil
+	
+	case isClassicKEM(pk.KEMId):
+
+		scheme := classicKEMSchemeMap[pk.KEMId].Scheme()			
+		publicKey, err := scheme.UnmarshalBinaryPublicKey(pk.PublicKey)
+		if err != nil {
+			return nil, nil, err
+		}
+		ciphertext, sharedSecret, err = scheme.Encapsulate(publicKey)
+		if err != nil {
+			return nil, nil, err
+		}
+		return sharedSecret, ciphertext, nil
+	
 	default:
 		return nil, nil, errors.New("crypto/kem: internal error: unsupported KEM in Encapsulate")
 	}
@@ -316,7 +368,7 @@ func Decapsulate(privateKey *PrivateKey, ciphertext []byte) (sharedSecret []byte
 			}
 
 		} else {
-			scheme := liboqsSchemeMap[privateKey.KEMId]
+			scheme := liboqsHybridSchemesMap[privateKey.KEMId]
 
 			ss, err = scheme.Decapsulate(privateKey, ciphertext)
 			if err != nil {
@@ -325,7 +377,61 @@ func Decapsulate(privateKey *PrivateKey, ciphertext []byte) (sharedSecret []byte
 		}
 
 		return ss, nil
+	
+	case isClassicKEM(privateKey.KEMId):
+		scheme := classicKEMSchemeMap[privateKey.KEMId].Scheme()			
+		privateKey, err := scheme.UnmarshalBinaryPrivateKey(privateKey.PrivateKey)
+		if err != nil {
+			return nil, err
+		}
+
+		sharedSecret, err = scheme.Decapsulate(privateKey, ciphertext)
+		if err != nil {
+			return nil, err
+		}	
+		return sharedSecret, nil
+
 	default:
 		return nil, errors.New("crypto/kem: internal error: unsupported KEM in Decapsulate")
 	}
+}
+
+func GetKemDetails(kemId ID) (KEMDetails, error) {	
+	switch kemId {
+	case IsLiboqs(kemId):
+		scheme, prs := liboqsHybridSchemesMap[kemId]
+		if !prs {
+			return KEMDetails{}, errors.New("KEM Details are only available for Hybrid Liboqs KEMs")
+		}
+
+		return scheme.details(kemId), nil	
+	case isClassicKEM(kemId):
+		scheme := classicKEMSchemeMap[kemId].Scheme()
+		
+		var nistLevel int
+		switch kemId {
+		case KEM_P256:
+			nistLevel = 1
+		case KEM_P384:
+			nistLevel = 3
+		case KEM_P521:
+			nistLevel = 5
+		}
+
+		details := KEMDetails{
+			ClaimedNISTLevel: nistLevel,
+			PublicKeySize: scheme.PublicKeySize(),
+			CiphertextSize: scheme.CiphertextSize(),
+		}
+		return details, nil
+
+	default:
+		return KEMDetails{}, errors.New("KEM Details are only available for Hybrid Liboqs KEMs")
+	}
+}
+
+var classicKEMSchemeMap = map[ID]hpke.KEM{
+	KEM_P256: hpke.KEM_P256_HKDF_SHA256, 
+	KEM_P384: hpke.KEM_P384_HKDF_SHA384,
+	KEM_P521: hpke.KEM_P521_HKDF_SHA512,
 }

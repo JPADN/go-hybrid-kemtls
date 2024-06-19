@@ -4,10 +4,11 @@ import (
 	"crypto"
 	"crypto/ecdsa"
 	"crypto/elliptic"
+	"crypto/rand"
 	"encoding/binary"
 	"errors"
 	"io"
-	"crypto/rand"
+
 	"github.com/open-quantum-safe/liboqs-go/oqs"
 	"golang.org/x/crypto/cryptobyte"
 )
@@ -62,7 +63,7 @@ func (priv *PrivateKey) Sign(rand io.Reader, digest []byte, opts crypto.SignerOp
 
 	pqcSigner := oqs.Signature{}
 
-	if err := pqcSigner.Init(sigIdtoName[priv.SigId], priv.pqc); err != nil {
+	if err := pqcSigner.Init(sigIdtoPQCName[priv.SigId], priv.pqc); err != nil {
 		return nil, err
 	}
 
@@ -136,7 +137,7 @@ func (pub *PublicKey) Verify(signed, sig []byte) (bool, error) {
 
 	verifier := oqs.Signature{}
 
-	if err := verifier.Init(sigIdtoName[pub.SigId], nil); err != nil {
+	if err := verifier.Init(sigIdtoPQCName[pub.SigId], nil); err != nil {
 		return false, err
 	}
 
@@ -171,10 +172,10 @@ func GenerateKey(sigId ID) (*PublicKey, *PrivateKey, error) {
 
 	oqsSignature := oqs.Signature{}
 
-	if err := oqsSignature.Init(sigIdtoName[sigId], nil); err != nil {
+	if err := oqsSignature.Init(sigIdtoPQCName[sigId], nil); err != nil {
 		return nil, nil, err
 	}
-
+	
 	pqcPub, err := oqsSignature.GenerateKeyPair()
 	if err != nil {
 		return nil, nil, err
@@ -252,8 +253,24 @@ func HashFromSig(sigId ID) (crypto.Hash, error) {
 	}
 }
 
-var sigIdtoName = map[ID]string {
+func NameToSigID(name string) (ID, error) {
+	for sigId, sigName := range sigIdToName {
+		if sigName == name {
+			return sigId, nil
+		}
+	}
+
+	return 0, errors.New("Unknown signature ID")	
+}
+
+var sigIdtoPQCName = map[ID]string {
 	P256_Dilithium2: "Dilithium2", P256_Falcon512: "Falcon-512", P256_RainbowIClassic: "Rainbow-I-Classic", 
 	P384_Dilithium3: "Dilithium3", P384_RainbowIIIClassic: "Rainbow-III-Classic", 
 	P521_Dilithium5: "Dilithium5", P521_Falcon1024: "Falcon-1024", P521_RainbowVClassic: "Rainbow-V-Classic",
+}
+
+var sigIdToName = map[ID]string {
+	P256_Dilithium2: "P256_Dilithium2", P256_Falcon512: "P256_Falcon512", P256_RainbowIClassic: "P256_RainbowIClassic", 
+	P384_Dilithium3: "P384_Dilithium3", P384_RainbowIIIClassic: "P384_RainbowIIIClassic", 
+	P521_Dilithium5: "P521_Dilithium5", P521_Falcon1024: "P521_Falcon1024", P521_RainbowVClassic: "P521_RainbowVClassic",
 }

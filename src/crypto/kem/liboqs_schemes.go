@@ -157,7 +157,7 @@ var p521_classic_mceliece_6688128 liboqsHybridScheme = liboqsHybridScheme{
 
 /* ------------------------------------ . ----------------------------------- */
 
-var liboqsSchemeMap = map[ID]liboqsHybridScheme{
+var liboqsHybridSchemesMap = map[ID]liboqsHybridScheme{
 	P256_Kyber512: p256_kyber512, P384_Kyber768: p384_kyber768, P521_Kyber1024: p521_kyber1024,
 	P256_LightSaber_KEM: p256_lightsaber_kem, P384_Saber_KEM: p384_saber_kem, P521_FireSaber_KEM: p521_firesaber_kem,
 	P256_NTRU_HPS_2048_509: p256_ntru_hps_2048_509, P384_NTRU_HPS_2048_677: p384_ntru_hps_2048_677, P521_NTRU_HPS_4096_821: p521_ntru_hps_4096_821, P521_NTRU_HPS_4096_1229: p521_ntru_hps_4096_1229,
@@ -165,7 +165,7 @@ var liboqsSchemeMap = map[ID]liboqsHybridScheme{
 	
 	P256_BIKE_L1: p256_bike_l1, P384_BIKE_L3: p384_bike_l3, P521_BIKE_L5: p521_bike_l5,
 	P256_HQC_128: p256_hqc_128, P384_HQC_192: p384_hqc_192, P521_HQC_256: p521_hqc_256,
-	P256_Classic_McEliece_348864: p256_classic_mceliece_348864, P384_Classic_McEliece_460896: p384_classic_mceliece_460896, P521_Classic_McEliece_6688128: p521_classic_mceliece_6688128
+	P256_Classic_McEliece_348864: p256_classic_mceliece_348864, P384_Classic_McEliece_460896: p384_classic_mceliece_460896, P521_Classic_McEliece_6688128: p521_classic_mceliece_6688128,
 }
 
 var liboqsKEMNames = map[ID]string {
