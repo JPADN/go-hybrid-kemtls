@@ -1,5 +1,7 @@
 package kem
 
+import "errors"
+
 func IsLiboqs(kemID ID) ID {
 	if kemID >= P256_Kyber512 && kemID <= NTRU_HRSS_1373 {
 		return kemID
@@ -108,4 +110,12 @@ func (sch *liboqsHybridScheme) Decapsulate(sk *PrivateKey, ct []byte) ([]byte, e
 	}
 
 	return append(classicSS, pqcSS...), nil
+}
+
+func GetLiboqsKEMName(kemId ID) (string, error) {
+	name, prs := liboqsKEMNames[kemId]
+	if !prs {
+		return "", errors.New("Liboqs KEM algorithm not found")
+	}
+	return name, nil
 }

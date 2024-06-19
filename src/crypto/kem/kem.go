@@ -145,7 +145,7 @@ func GenerateKey(rand io.Reader, kemID ID) (*PublicKey, *PrivateKey, error) {
 		if isPQCLiboqs(kemID) {
 			oqsKEM := oqs.KeyEncapsulation{}
 
-			if err := oqsKEM.Init(liboqsPQCKEMString[kemID], nil); err != nil {
+			if err := oqsKEM.Init(liboqsKEMNames[kemID], nil); err != nil {
 				return nil, nil, err
 			}
 			pubBytes, err = oqsKEM.GenerateKeyPair()
@@ -225,7 +225,7 @@ func Encapsulate(rand io.Reader, pk *PublicKey) (sharedSecret []byte, ciphertext
 		if isPQCLiboqs(pk.KEMId) {
 			oqsKEM := oqs.KeyEncapsulation{}
 
-			if err := oqsKEM.Init(liboqsPQCKEMString[pk.KEMId], nil); err != nil {
+			if err := oqsKEM.Init(liboqsKEMNames[pk.KEMId], nil); err != nil {
 				return nil, nil, err
 			}
 
@@ -296,7 +296,7 @@ func Decapsulate(privateKey *PrivateKey, ciphertext []byte) (sharedSecret []byte
 		if isPQCLiboqs(privateKey.KEMId) {
 			oqsKEM := oqs.KeyEncapsulation{}
 
-			if err := oqsKEM.Init(liboqsPQCKEMString[privateKey.KEMId], privateKey.PrivateKey); err != nil {
+			if err := oqsKEM.Init(liboqsKEMNames[privateKey.KEMId], privateKey.PrivateKey); err != nil {
 				return nil, err
 			}
 
